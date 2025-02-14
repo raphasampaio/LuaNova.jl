@@ -10,9 +10,15 @@ function test_simple_example()
 
     LuaCall.C.luaL_openlibs(L)
 
-    @show LuaCall.C.luaL_loadstring(L, "print('Hello, world!')") || LuaCall.C.lua_pcallk(L, 0, -1, 0, 0, 0)
+    @show LuaCall.C.luaL_loadstring(L, "print('Hello, world!')")
+    
+    @show LuaCall.C.lua_pcallk(L, 0, -1, 0, 0, C_NULL)
 
-    @show LuaCall.C.lua_type(L, Cint(-1))
+    # lua_pcall(L, 0, LUA_MULTRET, 0))
+    # lua_pcall(L,n,r,f)
+    # (L, (n), (r), (f), 0, NULL)
+
+    # @show LuaCall.C.lua_type(L, Cint(-1))
 
     # @show LuaCall.C.lua_tostring(L, Cint(-1))
 
