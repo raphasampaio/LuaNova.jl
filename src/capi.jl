@@ -3,438 +3,11 @@ module C
 using Lua_jll
 export Lua_jll
 
-const lua_Number = Cdouble
-
 const lua_Integer = Clonglong
 
+const lua_Number = Cdouble
+
 mutable struct lua_State end
-
-const lua_KContext = Cptrdiff_t
-
-# typedef int ( * lua_KFunction ) ( lua_State * L , int status , lua_KContext ctx )
-const lua_KFunction = Ptr{Cvoid}
-
-function lua_callk(L, nargs, nresults, ctx, k)
-    @ccall liblua.lua_callk(L::Ptr{lua_State}, nargs::Cint, nresults::Cint, ctx::lua_KContext, k::lua_KFunction)::Cvoid
-end
-
-function lua_pcallk(L, nargs, nresults, errfunc, ctx, k)
-    @ccall liblua.lua_pcallk(L::Ptr{lua_State}, nargs::Cint, nresults::Cint, errfunc::Cint, ctx::lua_KContext, k::lua_KFunction)::Cint
-end
-
-function lua_yieldk(L, nresults, ctx, k)
-    @ccall liblua.lua_yieldk(L::Ptr{lua_State}, nresults::Cint, ctx::lua_KContext, k::lua_KFunction)::Cint
-end
-
-function lua_tonumberx(L, idx, isnum)
-    @ccall liblua.lua_tonumberx(L::Ptr{lua_State}, idx::Cint, isnum::Ptr{Cint})::lua_Number
-end
-
-function lua_tointegerx(L, idx, isnum)
-    @ccall liblua.lua_tointegerx(L::Ptr{lua_State}, idx::Cint, isnum::Ptr{Cint})::lua_Integer
-end
-
-function lua_settop(L, idx)
-    @ccall liblua.lua_settop(L::Ptr{lua_State}, idx::Cint)::Cvoid
-end
-
-function lua_createtable(L, narr, nrec)
-    @ccall liblua.lua_createtable(L::Ptr{lua_State}, narr::Cint, nrec::Cint)::Cvoid
-end
-
-# typedef int ( * lua_CFunction ) ( lua_State * L )
-const lua_CFunction = Ptr{Cvoid}
-
-function lua_pushcclosure(L, fn, n)
-    @ccall liblua.lua_pushcclosure(L::Ptr{lua_State}, fn::lua_CFunction, n::Cint)::Cvoid
-end
-
-function lua_setglobal(L, name)
-    @ccall liblua.lua_setglobal(L::Ptr{lua_State}, name::Ptr{Cchar})::Cvoid
-end
-
-function lua_type(L, idx)
-    @ccall liblua.lua_type(L::Ptr{lua_State}, idx::Cint)::Cint
-end
-
-function lua_pushstring(L, s)
-    @ccall liblua.lua_pushstring(L::Ptr{lua_State}, s::Ptr{Cchar})::Ptr{Cchar}
-end
-
-function lua_rawgeti(L, idx, n)
-    @ccall liblua.lua_rawgeti(L::Ptr{lua_State}, idx::Cint, n::lua_Integer)::Cint
-end
-
-function lua_tolstring(L, idx, len)
-    @ccall liblua.lua_tolstring(L::Ptr{lua_State}, idx::Cint, len::Ptr{Csize_t})::Ptr{Cchar}
-end
-
-function lua_rotate(L, idx, n)
-    @ccall liblua.lua_rotate(L::Ptr{lua_State}, idx::Cint, n::Cint)::Cvoid
-end
-
-function lua_copy(L, fromidx, toidx)
-    @ccall liblua.lua_copy(L::Ptr{lua_State}, fromidx::Cint, toidx::Cint)::Cvoid
-end
-
-function lua_newuserdatauv(L, sz, nuvalue)
-    @ccall liblua.lua_newuserdatauv(L::Ptr{lua_State}, sz::Csize_t, nuvalue::Cint)::Ptr{Cvoid}
-end
-
-function lua_getiuservalue(L, idx, n)
-    @ccall liblua.lua_getiuservalue(L::Ptr{lua_State}, idx::Cint, n::Cint)::Cint
-end
-
-function lua_setiuservalue(L, idx, n)
-    @ccall liblua.lua_setiuservalue(L::Ptr{lua_State}, idx::Cint, n::Cint)::Cint
-end
-
-const lua_Unsigned = Culonglong
-
-# typedef const char * ( * lua_Reader ) ( lua_State * L , void * ud , size_t * sz )
-const lua_Reader = Ptr{Cvoid}
-
-# typedef int ( * lua_Writer ) ( lua_State * L , const void * p , size_t sz , void * ud )
-const lua_Writer = Ptr{Cvoid}
-
-# typedef void * ( * lua_Alloc ) ( void * ud , void * ptr , size_t osize , size_t nsize )
-const lua_Alloc = Ptr{Cvoid}
-
-# typedef void ( * lua_WarnFunction ) ( void * ud , const char * msg , int tocont )
-const lua_WarnFunction = Ptr{Cvoid}
-
-mutable struct CallInfo end
-
-struct lua_Debug
-    event::Cint
-    name::Ptr{Cchar}
-    namewhat::Ptr{Cchar}
-    what::Ptr{Cchar}
-    source::Ptr{Cchar}
-    srclen::Csize_t
-    currentline::Cint
-    linedefined::Cint
-    lastlinedefined::Cint
-    nups::Cuchar
-    nparams::Cuchar
-    isvararg::Cchar
-    istailcall::Cchar
-    ftransfer::Cushort
-    ntransfer::Cushort
-    short_src::NTuple{60, Cchar}
-    i_ci::Ptr{CallInfo}
-end
-
-# typedef void ( * lua_Hook ) ( lua_State * L , lua_Debug * ar )
-const lua_Hook = Ptr{Cvoid}
-
-function lua_newstate(f, ud)
-    @ccall liblua.lua_newstate(f::lua_Alloc, ud::Ptr{Cvoid})::Ptr{lua_State}
-end
-
-function lua_close(L)
-    @ccall liblua.lua_close(L::Ptr{lua_State})::Cvoid
-end
-
-function lua_newthread(L)
-    @ccall liblua.lua_newthread(L::Ptr{lua_State})::Ptr{lua_State}
-end
-
-function lua_closethread(L, from)
-    @ccall liblua.lua_closethread(L::Ptr{lua_State}, from::Ptr{lua_State})::Cint
-end
-
-function lua_resetthread(L)
-    @ccall liblua.lua_resetthread(L::Ptr{lua_State})::Cint
-end
-
-function lua_atpanic(L, panicf)
-    @ccall liblua.lua_atpanic(L::Ptr{lua_State}, panicf::lua_CFunction)::lua_CFunction
-end
-
-function lua_version(L)
-    @ccall liblua.lua_version(L::Ptr{lua_State})::lua_Number
-end
-
-function lua_absindex(L, idx)
-    @ccall liblua.lua_absindex(L::Ptr{lua_State}, idx::Cint)::Cint
-end
-
-function lua_gettop(L)
-    @ccall liblua.lua_gettop(L::Ptr{lua_State})::Cint
-end
-
-function lua_pushvalue(L, idx)
-    @ccall liblua.lua_pushvalue(L::Ptr{lua_State}, idx::Cint)::Cvoid
-end
-
-function lua_checkstack(L, n)
-    @ccall liblua.lua_checkstack(L::Ptr{lua_State}, n::Cint)::Cint
-end
-
-function lua_xmove(from, to, n)
-    @ccall liblua.lua_xmove(from::Ptr{lua_State}, to::Ptr{lua_State}, n::Cint)::Cvoid
-end
-
-function lua_isnumber(L, idx)
-    @ccall liblua.lua_isnumber(L::Ptr{lua_State}, idx::Cint)::Cint
-end
-
-function lua_isstring(L, idx)
-    @ccall liblua.lua_isstring(L::Ptr{lua_State}, idx::Cint)::Cint
-end
-
-function lua_iscfunction(L, idx)
-    @ccall liblua.lua_iscfunction(L::Ptr{lua_State}, idx::Cint)::Cint
-end
-
-function lua_isinteger(L, idx)
-    @ccall liblua.lua_isinteger(L::Ptr{lua_State}, idx::Cint)::Cint
-end
-
-function lua_isuserdata(L, idx)
-    @ccall liblua.lua_isuserdata(L::Ptr{lua_State}, idx::Cint)::Cint
-end
-
-function lua_typename(L, tp)
-    @ccall liblua.lua_typename(L::Ptr{lua_State}, tp::Cint)::Ptr{Cchar}
-end
-
-function lua_toboolean(L, idx)
-    @ccall liblua.lua_toboolean(L::Ptr{lua_State}, idx::Cint)::Cint
-end
-
-function lua_rawlen(L, idx)
-    @ccall liblua.lua_rawlen(L::Ptr{lua_State}, idx::Cint)::lua_Unsigned
-end
-
-function lua_tocfunction(L, idx)
-    @ccall liblua.lua_tocfunction(L::Ptr{lua_State}, idx::Cint)::lua_CFunction
-end
-
-function lua_touserdata(L, idx)
-    @ccall liblua.lua_touserdata(L::Ptr{lua_State}, idx::Cint)::Ptr{Cvoid}
-end
-
-function lua_tothread(L, idx)
-    @ccall liblua.lua_tothread(L::Ptr{lua_State}, idx::Cint)::Ptr{lua_State}
-end
-
-function lua_topointer(L, idx)
-    @ccall liblua.lua_topointer(L::Ptr{lua_State}, idx::Cint)::Ptr{Cvoid}
-end
-
-function lua_arith(L, op)
-    @ccall liblua.lua_arith(L::Ptr{lua_State}, op::Cint)::Cvoid
-end
-
-function lua_rawequal(L, idx1, idx2)
-    @ccall liblua.lua_rawequal(L::Ptr{lua_State}, idx1::Cint, idx2::Cint)::Cint
-end
-
-function lua_compare(L, idx1, idx2, op)
-    @ccall liblua.lua_compare(L::Ptr{lua_State}, idx1::Cint, idx2::Cint, op::Cint)::Cint
-end
-
-function lua_pushnil(L)
-    @ccall liblua.lua_pushnil(L::Ptr{lua_State})::Cvoid
-end
-
-function lua_pushnumber(L, n)
-    @ccall liblua.lua_pushnumber(L::Ptr{lua_State}, n::lua_Number)::Cvoid
-end
-
-function lua_pushinteger(L, n)
-    @ccall liblua.lua_pushinteger(L::Ptr{lua_State}, n::lua_Integer)::Cvoid
-end
-
-function lua_pushlstring(L, s, len)
-    @ccall liblua.lua_pushlstring(L::Ptr{lua_State}, s::Ptr{Cchar}, len::Csize_t)::Ptr{Cchar}
-end
-
-function lua_pushboolean(L, b)
-    @ccall liblua.lua_pushboolean(L::Ptr{lua_State}, b::Cint)::Cvoid
-end
-
-function lua_pushlightuserdata(L, p)
-    @ccall liblua.lua_pushlightuserdata(L::Ptr{lua_State}, p::Ptr{Cvoid})::Cvoid
-end
-
-function lua_pushthread(L)
-    @ccall liblua.lua_pushthread(L::Ptr{lua_State})::Cint
-end
-
-function lua_getglobal(L, name)
-    @ccall liblua.lua_getglobal(L::Ptr{lua_State}, name::Ptr{Cchar})::Cint
-end
-
-function lua_gettable(L, idx)
-    @ccall liblua.lua_gettable(L::Ptr{lua_State}, idx::Cint)::Cint
-end
-
-function lua_getfield(L, idx, k)
-    @ccall liblua.lua_getfield(L::Ptr{lua_State}, idx::Cint, k::Ptr{Cchar})::Cint
-end
-
-function lua_geti(L, idx, n)
-    @ccall liblua.lua_geti(L::Ptr{lua_State}, idx::Cint, n::lua_Integer)::Cint
-end
-
-function lua_rawget(L, idx)
-    @ccall liblua.lua_rawget(L::Ptr{lua_State}, idx::Cint)::Cint
-end
-
-function lua_rawgetp(L, idx, p)
-    @ccall liblua.lua_rawgetp(L::Ptr{lua_State}, idx::Cint, p::Ptr{Cvoid})::Cint
-end
-
-function lua_getmetatable(L, objindex)
-    @ccall liblua.lua_getmetatable(L::Ptr{lua_State}, objindex::Cint)::Cint
-end
-
-function lua_settable(L, idx)
-    @ccall liblua.lua_settable(L::Ptr{lua_State}, idx::Cint)::Cvoid
-end
-
-function lua_setfield(L, idx, k)
-    @ccall liblua.lua_setfield(L::Ptr{lua_State}, idx::Cint, k::Ptr{Cchar})::Cvoid
-end
-
-function lua_seti(L, idx, n)
-    @ccall liblua.lua_seti(L::Ptr{lua_State}, idx::Cint, n::lua_Integer)::Cvoid
-end
-
-function lua_rawset(L, idx)
-    @ccall liblua.lua_rawset(L::Ptr{lua_State}, idx::Cint)::Cvoid
-end
-
-function lua_rawseti(L, idx, n)
-    @ccall liblua.lua_rawseti(L::Ptr{lua_State}, idx::Cint, n::lua_Integer)::Cvoid
-end
-
-function lua_rawsetp(L, idx, p)
-    @ccall liblua.lua_rawsetp(L::Ptr{lua_State}, idx::Cint, p::Ptr{Cvoid})::Cvoid
-end
-
-function lua_setmetatable(L, objindex)
-    @ccall liblua.lua_setmetatable(L::Ptr{lua_State}, objindex::Cint)::Cint
-end
-
-function lua_load(L, reader, dt, chunkname, mode)
-    @ccall liblua.lua_load(L::Ptr{lua_State}, reader::lua_Reader, dt::Ptr{Cvoid}, chunkname::Ptr{Cchar}, mode::Ptr{Cchar})::Cint
-end
-
-function lua_dump(L, writer, data, strip)
-    @ccall liblua.lua_dump(L::Ptr{lua_State}, writer::lua_Writer, data::Ptr{Cvoid}, strip::Cint)::Cint
-end
-
-function lua_resume(L, from, narg, nres)
-    @ccall liblua.lua_resume(L::Ptr{lua_State}, from::Ptr{lua_State}, narg::Cint, nres::Ptr{Cint})::Cint
-end
-
-function lua_status(L)
-    @ccall liblua.lua_status(L::Ptr{lua_State})::Cint
-end
-
-function lua_isyieldable(L)
-    @ccall liblua.lua_isyieldable(L::Ptr{lua_State})::Cint
-end
-
-function lua_setwarnf(L, f, ud)
-    @ccall liblua.lua_setwarnf(L::Ptr{lua_State}, f::lua_WarnFunction, ud::Ptr{Cvoid})::Cvoid
-end
-
-function lua_warning(L, msg, tocont)
-    @ccall liblua.lua_warning(L::Ptr{lua_State}, msg::Ptr{Cchar}, tocont::Cint)::Cvoid
-end
-
-function lua_error(L)
-    @ccall liblua.lua_error(L::Ptr{lua_State})::Cint
-end
-
-function lua_next(L, idx)
-    @ccall liblua.lua_next(L::Ptr{lua_State}, idx::Cint)::Cint
-end
-
-function lua_concat(L, n)
-    @ccall liblua.lua_concat(L::Ptr{lua_State}, n::Cint)::Cvoid
-end
-
-function lua_len(L, idx)
-    @ccall liblua.lua_len(L::Ptr{lua_State}, idx::Cint)::Cvoid
-end
-
-function lua_stringtonumber(L, s)
-    @ccall liblua.lua_stringtonumber(L::Ptr{lua_State}, s::Ptr{Cchar})::Csize_t
-end
-
-function lua_getallocf(L, ud)
-    @ccall liblua.lua_getallocf(L::Ptr{lua_State}, ud::Ptr{Ptr{Cvoid}})::lua_Alloc
-end
-
-function lua_setallocf(L, f, ud)
-    @ccall liblua.lua_setallocf(L::Ptr{lua_State}, f::lua_Alloc, ud::Ptr{Cvoid})::Cvoid
-end
-
-function lua_toclose(L, idx)
-    @ccall liblua.lua_toclose(L::Ptr{lua_State}, idx::Cint)::Cvoid
-end
-
-function lua_closeslot(L, idx)
-    @ccall liblua.lua_closeslot(L::Ptr{lua_State}, idx::Cint)::Cvoid
-end
-
-function lua_getstack(L, level, ar)
-    @ccall liblua.lua_getstack(L::Ptr{lua_State}, level::Cint, ar::Ptr{lua_Debug})::Cint
-end
-
-function lua_getinfo(L, what, ar)
-    @ccall liblua.lua_getinfo(L::Ptr{lua_State}, what::Ptr{Cchar}, ar::Ptr{lua_Debug})::Cint
-end
-
-function lua_getlocal(L, ar, n)
-    @ccall liblua.lua_getlocal(L::Ptr{lua_State}, ar::Ptr{lua_Debug}, n::Cint)::Ptr{Cchar}
-end
-
-function lua_setlocal(L, ar, n)
-    @ccall liblua.lua_setlocal(L::Ptr{lua_State}, ar::Ptr{lua_Debug}, n::Cint)::Ptr{Cchar}
-end
-
-function lua_getupvalue(L, funcindex, n)
-    @ccall liblua.lua_getupvalue(L::Ptr{lua_State}, funcindex::Cint, n::Cint)::Ptr{Cchar}
-end
-
-function lua_setupvalue(L, funcindex, n)
-    @ccall liblua.lua_setupvalue(L::Ptr{lua_State}, funcindex::Cint, n::Cint)::Ptr{Cchar}
-end
-
-function lua_upvalueid(L, fidx, n)
-    @ccall liblua.lua_upvalueid(L::Ptr{lua_State}, fidx::Cint, n::Cint)::Ptr{Cvoid}
-end
-
-function lua_upvaluejoin(L, fidx1, n1, fidx2, n2)
-    @ccall liblua.lua_upvaluejoin(L::Ptr{lua_State}, fidx1::Cint, n1::Cint, fidx2::Cint, n2::Cint)::Cvoid
-end
-
-function lua_sethook(L, func, mask, count)
-    @ccall liblua.lua_sethook(L::Ptr{lua_State}, func::lua_Hook, mask::Cint, count::Cint)::Cvoid
-end
-
-function lua_gethook(L)
-    @ccall liblua.lua_gethook(L::Ptr{lua_State})::lua_Hook
-end
-
-function lua_gethookmask(L)
-    @ccall liblua.lua_gethookmask(L::Ptr{lua_State})::Cint
-end
-
-function lua_gethookcount(L)
-    @ccall liblua.lua_gethookcount(L::Ptr{lua_State})::Cint
-end
-
-function lua_setcstacklimit(L, limit)
-    @ccall liblua.lua_setcstacklimit(L::Ptr{lua_State}, limit::Cuint)::Cint
-end
 
 function luaL_checkversion_(L, ver, sz)
     @ccall liblua.luaL_checkversion_(L::Ptr{lua_State}, ver::lua_Number, sz::Csize_t)::Cvoid
@@ -443,6 +16,13 @@ end
 function luaL_loadfilex(L, filename, mode)
     @ccall liblua.luaL_loadfilex(L::Ptr{lua_State}, filename::Ptr{Cchar}, mode::Ptr{Cchar})::Cint
 end
+
+function lua_createtable(L, narr, nrec)
+    @ccall liblua.lua_createtable(L::Ptr{lua_State}, narr::Cint, nrec::Cint)::Cvoid
+end
+
+# typedef int ( * lua_CFunction ) ( lua_State * L )
+const lua_CFunction = Ptr{Cvoid}
 
 struct luaL_Reg
     name::Ptr{Cchar}
@@ -469,12 +49,39 @@ function luaL_optlstring(L, arg, def, l)
     @ccall liblua.luaL_optlstring(L::Ptr{lua_State}, arg::Cint, def::Ptr{Cchar}, l::Ptr{Csize_t})::Ptr{Cchar}
 end
 
+function lua_typename(L, tp)
+    @ccall liblua.lua_typename(L::Ptr{lua_State}, tp::Cint)::Ptr{Cchar}
+end
+
+function lua_type(L, idx)
+    @ccall liblua.lua_type(L::Ptr{lua_State}, idx::Cint)::Cint
+end
+
+const lua_KContext = Cptrdiff_t
+
+# typedef int ( * lua_KFunction ) ( lua_State * L , int status , lua_KContext ctx )
+const lua_KFunction = Ptr{Cvoid}
+
+function lua_pcallk(L, nargs, nresults, errfunc, ctx, k)
+    @ccall liblua.lua_pcallk(L::Ptr{lua_State}, nargs::Cint, nresults::Cint, errfunc::Cint, ctx::lua_KContext, k::lua_KFunction)::Cint
+end
+
 function luaL_loadstring(L, s)
     @ccall liblua.luaL_loadstring(L::Ptr{lua_State}, s::Ptr{Cchar})::Cint
 end
 
+function lua_getfield(L, idx, k)
+    @ccall liblua.lua_getfield(L::Ptr{lua_State}, idx::Cint, k::Ptr{Cchar})::Cint
+end
+
 function luaL_loadbufferx(L, buff, sz, name, mode)
     @ccall liblua.luaL_loadbufferx(L::Ptr{lua_State}, buff::Ptr{Cchar}, sz::Csize_t, name::Ptr{Cchar}, mode::Ptr{Cchar})::Cint
+end
+
+const lua_Unsigned = Culonglong
+
+function lua_pushnil(L)
+    @ccall liblua.lua_pushnil(L::Ptr{lua_State})::Cvoid
 end
 
 struct var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)"
@@ -671,119 +278,484 @@ struct luaL_Stream
     closef::lua_CFunction
 end
 
+function lua_callk(L, nargs, nresults, ctx, k)
+    @ccall liblua.lua_callk(L::Ptr{lua_State}, nargs::Cint, nresults::Cint, ctx::lua_KContext, k::lua_KFunction)::Cvoid
+end
+
+function lua_yieldk(L, nresults, ctx, k)
+    @ccall liblua.lua_yieldk(L::Ptr{lua_State}, nresults::Cint, ctx::lua_KContext, k::lua_KFunction)::Cint
+end
+
+function lua_tonumberx(L, idx, isnum)
+    @ccall liblua.lua_tonumberx(L::Ptr{lua_State}, idx::Cint, isnum::Ptr{Cint})::lua_Number
+end
+
+function lua_tointegerx(L, idx, isnum)
+    @ccall liblua.lua_tointegerx(L::Ptr{lua_State}, idx::Cint, isnum::Ptr{Cint})::lua_Integer
+end
+
+function lua_settop(L, idx)
+    @ccall liblua.lua_settop(L::Ptr{lua_State}, idx::Cint)::Cvoid
+end
+
+function lua_pushcclosure(L, fn, n)
+    @ccall liblua.lua_pushcclosure(L::Ptr{lua_State}, fn::lua_CFunction, n::Cint)::Cvoid
+end
+
+function lua_setglobal(L, name)
+    @ccall liblua.lua_setglobal(L::Ptr{lua_State}, name::Ptr{Cchar})::Cvoid
+end
+
+function lua_pushstring(L, s)
+    @ccall liblua.lua_pushstring(L::Ptr{lua_State}, s::Ptr{Cchar})::Ptr{Cchar}
+end
+
+function lua_rawgeti(L, idx, n)
+    @ccall liblua.lua_rawgeti(L::Ptr{lua_State}, idx::Cint, n::lua_Integer)::Cint
+end
+
+function lua_tolstring(L, idx, len)
+    @ccall liblua.lua_tolstring(L::Ptr{lua_State}, idx::Cint, len::Ptr{Csize_t})::Ptr{Cchar}
+end
+
+function lua_rotate(L, idx, n)
+    @ccall liblua.lua_rotate(L::Ptr{lua_State}, idx::Cint, n::Cint)::Cvoid
+end
+
+function lua_copy(L, fromidx, toidx)
+    @ccall liblua.lua_copy(L::Ptr{lua_State}, fromidx::Cint, toidx::Cint)::Cvoid
+end
+
+function lua_newuserdatauv(L, sz, nuvalue)
+    @ccall liblua.lua_newuserdatauv(L::Ptr{lua_State}, sz::Csize_t, nuvalue::Cint)::Ptr{Cvoid}
+end
+
+function lua_getiuservalue(L, idx, n)
+    @ccall liblua.lua_getiuservalue(L::Ptr{lua_State}, idx::Cint, n::Cint)::Cint
+end
+
+function lua_setiuservalue(L, idx, n)
+    @ccall liblua.lua_setiuservalue(L::Ptr{lua_State}, idx::Cint, n::Cint)::Cint
+end
+
+# typedef const char * ( * lua_Reader ) ( lua_State * L , void * ud , size_t * sz )
+const lua_Reader = Ptr{Cvoid}
+
+# typedef int ( * lua_Writer ) ( lua_State * L , const void * p , size_t sz , void * ud )
+const lua_Writer = Ptr{Cvoid}
+
+# typedef void * ( * lua_Alloc ) ( void * ud , void * ptr , size_t osize , size_t nsize )
+const lua_Alloc = Ptr{Cvoid}
+
+# typedef void ( * lua_WarnFunction ) ( void * ud , const char * msg , int tocont )
+const lua_WarnFunction = Ptr{Cvoid}
+
+mutable struct CallInfo end
+
+struct lua_Debug
+    event::Cint
+    name::Ptr{Cchar}
+    namewhat::Ptr{Cchar}
+    what::Ptr{Cchar}
+    source::Ptr{Cchar}
+    srclen::Csize_t
+    currentline::Cint
+    linedefined::Cint
+    lastlinedefined::Cint
+    nups::Cuchar
+    nparams::Cuchar
+    isvararg::Cchar
+    istailcall::Cchar
+    ftransfer::Cushort
+    ntransfer::Cushort
+    short_src::NTuple{60, Cchar}
+    i_ci::Ptr{CallInfo}
+end
+
+# typedef void ( * lua_Hook ) ( lua_State * L , lua_Debug * ar )
+const lua_Hook = Ptr{Cvoid}
+
+function lua_newstate(f, ud)
+    @ccall liblua.lua_newstate(f::lua_Alloc, ud::Ptr{Cvoid})::Ptr{lua_State}
+end
+
+function lua_close(L)
+    @ccall liblua.lua_close(L::Ptr{lua_State})::Cvoid
+end
+
+function lua_newthread(L)
+    @ccall liblua.lua_newthread(L::Ptr{lua_State})::Ptr{lua_State}
+end
+
+function lua_closethread(L, from)
+    @ccall liblua.lua_closethread(L::Ptr{lua_State}, from::Ptr{lua_State})::Cint
+end
+
+function lua_resetthread(L)
+    @ccall liblua.lua_resetthread(L::Ptr{lua_State})::Cint
+end
+
+function lua_atpanic(L, panicf)
+    @ccall liblua.lua_atpanic(L::Ptr{lua_State}, panicf::lua_CFunction)::lua_CFunction
+end
+
+function lua_version(L)
+    @ccall liblua.lua_version(L::Ptr{lua_State})::lua_Number
+end
+
+function lua_absindex(L, idx)
+    @ccall liblua.lua_absindex(L::Ptr{lua_State}, idx::Cint)::Cint
+end
+
+function lua_gettop(L)
+    @ccall liblua.lua_gettop(L::Ptr{lua_State})::Cint
+end
+
+function lua_pushvalue(L, idx)
+    @ccall liblua.lua_pushvalue(L::Ptr{lua_State}, idx::Cint)::Cvoid
+end
+
+function lua_checkstack(L, n)
+    @ccall liblua.lua_checkstack(L::Ptr{lua_State}, n::Cint)::Cint
+end
+
+function lua_xmove(from, to, n)
+    @ccall liblua.lua_xmove(from::Ptr{lua_State}, to::Ptr{lua_State}, n::Cint)::Cvoid
+end
+
+function lua_isnumber(L, idx)
+    @ccall liblua.lua_isnumber(L::Ptr{lua_State}, idx::Cint)::Cint
+end
+
+function lua_isstring(L, idx)
+    @ccall liblua.lua_isstring(L::Ptr{lua_State}, idx::Cint)::Cint
+end
+
+function lua_iscfunction(L, idx)
+    @ccall liblua.lua_iscfunction(L::Ptr{lua_State}, idx::Cint)::Cint
+end
+
+function lua_isinteger(L, idx)
+    @ccall liblua.lua_isinteger(L::Ptr{lua_State}, idx::Cint)::Cint
+end
+
+function lua_isuserdata(L, idx)
+    @ccall liblua.lua_isuserdata(L::Ptr{lua_State}, idx::Cint)::Cint
+end
+
+function lua_toboolean(L, idx)
+    @ccall liblua.lua_toboolean(L::Ptr{lua_State}, idx::Cint)::Cint
+end
+
+function lua_rawlen(L, idx)
+    @ccall liblua.lua_rawlen(L::Ptr{lua_State}, idx::Cint)::lua_Unsigned
+end
+
+function lua_tocfunction(L, idx)
+    @ccall liblua.lua_tocfunction(L::Ptr{lua_State}, idx::Cint)::lua_CFunction
+end
+
+function lua_touserdata(L, idx)
+    @ccall liblua.lua_touserdata(L::Ptr{lua_State}, idx::Cint)::Ptr{Cvoid}
+end
+
+function lua_tothread(L, idx)
+    @ccall liblua.lua_tothread(L::Ptr{lua_State}, idx::Cint)::Ptr{lua_State}
+end
+
+function lua_topointer(L, idx)
+    @ccall liblua.lua_topointer(L::Ptr{lua_State}, idx::Cint)::Ptr{Cvoid}
+end
+
+function lua_arith(L, op)
+    @ccall liblua.lua_arith(L::Ptr{lua_State}, op::Cint)::Cvoid
+end
+
+function lua_rawequal(L, idx1, idx2)
+    @ccall liblua.lua_rawequal(L::Ptr{lua_State}, idx1::Cint, idx2::Cint)::Cint
+end
+
+function lua_compare(L, idx1, idx2, op)
+    @ccall liblua.lua_compare(L::Ptr{lua_State}, idx1::Cint, idx2::Cint, op::Cint)::Cint
+end
+
+function lua_pushnumber(L, n)
+    @ccall liblua.lua_pushnumber(L::Ptr{lua_State}, n::lua_Number)::Cvoid
+end
+
+function lua_pushinteger(L, n)
+    @ccall liblua.lua_pushinteger(L::Ptr{lua_State}, n::lua_Integer)::Cvoid
+end
+
+function lua_pushlstring(L, s, len)
+    @ccall liblua.lua_pushlstring(L::Ptr{lua_State}, s::Ptr{Cchar}, len::Csize_t)::Ptr{Cchar}
+end
+
+function lua_pushboolean(L, b)
+    @ccall liblua.lua_pushboolean(L::Ptr{lua_State}, b::Cint)::Cvoid
+end
+
+function lua_pushlightuserdata(L, p)
+    @ccall liblua.lua_pushlightuserdata(L::Ptr{lua_State}, p::Ptr{Cvoid})::Cvoid
+end
+
+function lua_pushthread(L)
+    @ccall liblua.lua_pushthread(L::Ptr{lua_State})::Cint
+end
+
+function lua_getglobal(L, name)
+    @ccall liblua.lua_getglobal(L::Ptr{lua_State}, name::Ptr{Cchar})::Cint
+end
+
+function lua_gettable(L, idx)
+    @ccall liblua.lua_gettable(L::Ptr{lua_State}, idx::Cint)::Cint
+end
+
+function lua_geti(L, idx, n)
+    @ccall liblua.lua_geti(L::Ptr{lua_State}, idx::Cint, n::lua_Integer)::Cint
+end
+
+function lua_rawget(L, idx)
+    @ccall liblua.lua_rawget(L::Ptr{lua_State}, idx::Cint)::Cint
+end
+
+function lua_rawgetp(L, idx, p)
+    @ccall liblua.lua_rawgetp(L::Ptr{lua_State}, idx::Cint, p::Ptr{Cvoid})::Cint
+end
+
+function lua_getmetatable(L, objindex)
+    @ccall liblua.lua_getmetatable(L::Ptr{lua_State}, objindex::Cint)::Cint
+end
+
+function lua_settable(L, idx)
+    @ccall liblua.lua_settable(L::Ptr{lua_State}, idx::Cint)::Cvoid
+end
+
+function lua_setfield(L, idx, k)
+    @ccall liblua.lua_setfield(L::Ptr{lua_State}, idx::Cint, k::Ptr{Cchar})::Cvoid
+end
+
+function lua_seti(L, idx, n)
+    @ccall liblua.lua_seti(L::Ptr{lua_State}, idx::Cint, n::lua_Integer)::Cvoid
+end
+
+function lua_rawset(L, idx)
+    @ccall liblua.lua_rawset(L::Ptr{lua_State}, idx::Cint)::Cvoid
+end
+
+function lua_rawseti(L, idx, n)
+    @ccall liblua.lua_rawseti(L::Ptr{lua_State}, idx::Cint, n::lua_Integer)::Cvoid
+end
+
+function lua_rawsetp(L, idx, p)
+    @ccall liblua.lua_rawsetp(L::Ptr{lua_State}, idx::Cint, p::Ptr{Cvoid})::Cvoid
+end
+
+function lua_setmetatable(L, objindex)
+    @ccall liblua.lua_setmetatable(L::Ptr{lua_State}, objindex::Cint)::Cint
+end
+
+function lua_load(L, reader, dt, chunkname, mode)
+    @ccall liblua.lua_load(L::Ptr{lua_State}, reader::lua_Reader, dt::Ptr{Cvoid}, chunkname::Ptr{Cchar}, mode::Ptr{Cchar})::Cint
+end
+
+function lua_dump(L, writer, data, strip)
+    @ccall liblua.lua_dump(L::Ptr{lua_State}, writer::lua_Writer, data::Ptr{Cvoid}, strip::Cint)::Cint
+end
+
+function lua_resume(L, from, narg, nres)
+    @ccall liblua.lua_resume(L::Ptr{lua_State}, from::Ptr{lua_State}, narg::Cint, nres::Ptr{Cint})::Cint
+end
+
+function lua_status(L)
+    @ccall liblua.lua_status(L::Ptr{lua_State})::Cint
+end
+
+function lua_isyieldable(L)
+    @ccall liblua.lua_isyieldable(L::Ptr{lua_State})::Cint
+end
+
+function lua_setwarnf(L, f, ud)
+    @ccall liblua.lua_setwarnf(L::Ptr{lua_State}, f::lua_WarnFunction, ud::Ptr{Cvoid})::Cvoid
+end
+
+function lua_warning(L, msg, tocont)
+    @ccall liblua.lua_warning(L::Ptr{lua_State}, msg::Ptr{Cchar}, tocont::Cint)::Cvoid
+end
+
+function lua_error(L)
+    @ccall liblua.lua_error(L::Ptr{lua_State})::Cint
+end
+
+function lua_next(L, idx)
+    @ccall liblua.lua_next(L::Ptr{lua_State}, idx::Cint)::Cint
+end
+
+function lua_concat(L, n)
+    @ccall liblua.lua_concat(L::Ptr{lua_State}, n::Cint)::Cvoid
+end
+
+function lua_len(L, idx)
+    @ccall liblua.lua_len(L::Ptr{lua_State}, idx::Cint)::Cvoid
+end
+
+function lua_stringtonumber(L, s)
+    @ccall liblua.lua_stringtonumber(L::Ptr{lua_State}, s::Ptr{Cchar})::Csize_t
+end
+
+function lua_getallocf(L, ud)
+    @ccall liblua.lua_getallocf(L::Ptr{lua_State}, ud::Ptr{Ptr{Cvoid}})::lua_Alloc
+end
+
+function lua_setallocf(L, f, ud)
+    @ccall liblua.lua_setallocf(L::Ptr{lua_State}, f::lua_Alloc, ud::Ptr{Cvoid})::Cvoid
+end
+
+function lua_toclose(L, idx)
+    @ccall liblua.lua_toclose(L::Ptr{lua_State}, idx::Cint)::Cvoid
+end
+
+function lua_closeslot(L, idx)
+    @ccall liblua.lua_closeslot(L::Ptr{lua_State}, idx::Cint)::Cvoid
+end
+
+function lua_getstack(L, level, ar)
+    @ccall liblua.lua_getstack(L::Ptr{lua_State}, level::Cint, ar::Ptr{lua_Debug})::Cint
+end
+
+function lua_getinfo(L, what, ar)
+    @ccall liblua.lua_getinfo(L::Ptr{lua_State}, what::Ptr{Cchar}, ar::Ptr{lua_Debug})::Cint
+end
+
+function lua_getlocal(L, ar, n)
+    @ccall liblua.lua_getlocal(L::Ptr{lua_State}, ar::Ptr{lua_Debug}, n::Cint)::Ptr{Cchar}
+end
+
+function lua_setlocal(L, ar, n)
+    @ccall liblua.lua_setlocal(L::Ptr{lua_State}, ar::Ptr{lua_Debug}, n::Cint)::Ptr{Cchar}
+end
+
+function lua_getupvalue(L, funcindex, n)
+    @ccall liblua.lua_getupvalue(L::Ptr{lua_State}, funcindex::Cint, n::Cint)::Ptr{Cchar}
+end
+
+function lua_setupvalue(L, funcindex, n)
+    @ccall liblua.lua_setupvalue(L::Ptr{lua_State}, funcindex::Cint, n::Cint)::Ptr{Cchar}
+end
+
+function lua_upvalueid(L, fidx, n)
+    @ccall liblua.lua_upvalueid(L::Ptr{lua_State}, fidx::Cint, n::Cint)::Ptr{Cvoid}
+end
+
+function lua_upvaluejoin(L, fidx1, n1, fidx2, n2)
+    @ccall liblua.lua_upvaluejoin(L::Ptr{lua_State}, fidx1::Cint, n1::Cint, fidx2::Cint, n2::Cint)::Cvoid
+end
+
+function lua_sethook(L, func, mask, count)
+    @ccall liblua.lua_sethook(L::Ptr{lua_State}, func::lua_Hook, mask::Cint, count::Cint)::Cvoid
+end
+
+function lua_gethook(L)
+    @ccall liblua.lua_gethook(L::Ptr{lua_State})::lua_Hook
+end
+
+function lua_gethookmask(L)
+    @ccall liblua.lua_gethookmask(L::Ptr{lua_State})::Cint
+end
+
+function lua_gethookcount(L)
+    @ccall liblua.lua_gethookcount(L::Ptr{lua_State})::Cint
+end
+
+function lua_setcstacklimit(L, limit)
+    @ccall liblua.lua_setcstacklimit(L::Ptr{lua_State}, limit::Cuint)::Cint
+end
+
+function luaopen_base(L)
+    @ccall liblua.luaopen_base(L::Ptr{lua_State})::Cint
+end
+
+function luaopen_coroutine(L)
+    @ccall liblua.luaopen_coroutine(L::Ptr{lua_State})::Cint
+end
+
+function luaopen_table(L)
+    @ccall liblua.luaopen_table(L::Ptr{lua_State})::Cint
+end
+
+function luaopen_io(L)
+    @ccall liblua.luaopen_io(L::Ptr{lua_State})::Cint
+end
+
+function luaopen_os(L)
+    @ccall liblua.luaopen_os(L::Ptr{lua_State})::Cint
+end
+
+function luaopen_string(L)
+    @ccall liblua.luaopen_string(L::Ptr{lua_State})::Cint
+end
+
+function luaopen_utf8(L)
+    @ccall liblua.luaopen_utf8(L::Ptr{lua_State})::Cint
+end
+
+function luaopen_math(L)
+    @ccall liblua.luaopen_math(L::Ptr{lua_State})::Cint
+end
+
+function luaopen_debug(L)
+    @ccall liblua.luaopen_debug(L::Ptr{lua_State})::Cint
+end
+
+function luaopen_package(L)
+    @ccall liblua.luaopen_package(L::Ptr{lua_State})::Cint
+end
+
+function luaL_openlibs(L)
+    @ccall liblua.luaL_openlibs(L::Ptr{lua_State})::Cvoid
+end
+
 const UINT_MAX = typemax(Int64)
 
-const LUAI_IS32INT = UINT_MAX >> 30 >= 3
+const LUA_GNAME = "_G"
 
-const LUA_INT_INT = 1
+const LUA_ERRERR = 5
 
-const LUA_INT_LONG = 2
+const LUA_ERRFILE = LUA_ERRERR + 1
 
-const LUA_INT_LONGLONG = 3
+const LUA_LOADED_TABLE = "_LOADED"
 
-const LUA_FLOAT_FLOAT = 1
+const LUA_PRELOAD_TABLE = "_PRELOAD"
 
-const LUA_FLOAT_DOUBLE = 2
+# Skipping MacroDefinition: LUAL_NUMSIZES ( sizeof ( lua_Integer ) * 16 + sizeof ( lua_Number ) )
 
-const LUA_FLOAT_LONGDOUBLE = 3
+const LUA_VERSION_NUM = 504
 
-const LUA_INT_DEFAULT = LUA_INT_LONGLONG
+const LUA_NOREF = -2
 
-const LUA_FLOAT_DEFAULT = LUA_FLOAT_DOUBLE
+const LUA_REFNIL = -1
 
-const LUA_32BITS = 0
+const LUA_MULTRET = -1
 
-const LUA_C89_NUMBERS = 0
+const LUAI_MAXSTACK = 1000000
 
-const LUA_INT_TYPE = LUA_INT_DEFAULT
+const LUA_REGISTRYINDEX = -LUAI_MAXSTACK - 1000
 
-const LUA_FLOAT_TYPE = LUA_FLOAT_DEFAULT
+# Skipping MacroDefinition: LUAL_BUFFERSIZE ( ( int ) ( 16 * sizeof ( void * ) * sizeof ( lua_Number ) ) )
 
-const LUA_PATH_SEP = ";"
-
-const LUA_PATH_MARK = "?"
-
-const LUA_EXEC_DIR = "!"
+const LUA_FILEHANDLE = "FILE*"
 
 const LUA_VERSION_MAJOR = "5"
 
 const LUA_VERSION_MINOR = "4"
 
-const LUA_VDIR = LUA_VERSION_MAJOR * "." * LUA_VERSION_MINOR
-
-const LUA_LDIR = "!\\lua\\"
-
-const LUA_CDIR = "!\\"
-
-const LUA_SHRDIR = "!\\..\\share\\lua\\" * LUA_VDIR * "\\"
-
-# Skipping MacroDefinition: LUA_PATH_DEFAULT LUA_LDIR "?.lua;" LUA_LDIR "?\\init.lua;" LUA_CDIR "?.lua;" LUA_CDIR "?\\init.lua;" LUA_SHRDIR "?.lua;" LUA_SHRDIR "?\\init.lua;" ".\\?.lua;" ".\\?\\init.lua"
-
-# Skipping MacroDefinition: LUA_CPATH_DEFAULT LUA_CDIR "?.dll;" LUA_CDIR "..\\lib\\lua\\" LUA_VDIR "\\?.dll;" LUA_CDIR "loadall.dll;" ".\\?.dll"
-
-const LUA_DIRSEP = "\\"
-
-const LUA_IGMARK = "-"
-
-# Skipping MacroDefinition: LUA_API extern
-
-# Skipping MacroDefinition: LUAI_FUNC extern
-
-const LUA_NUMBER_FMT = "%.14g"
-
-const LUAI_UACNUMBER = Float64
-
-const LUA_NUMBER = Float64
-
-# const LUA_MININTEGER = LLONG_MIN
-
-const LUA_INTEGER = Clonglong
-
-const LUA_NUMBER_FRMLEN = ""
-
-const LUA_INTEGER_FRMLEN = "ll"
-
-const LUA_INTEGER_FMT = "%" * LUA_INTEGER_FRMLEN * "d"
-
-const LUAI_UACINT = LUA_INTEGER
-
-const LUA_UNSIGNED = unsigned(LUAI_UACINT)
-
-# const LUA_MAXINTEGER = LLONG_MAX
-
-# const LUA_MAXUNSIGNED = ULLONG_MAX
-
-# const LUA_KCONTEXT = ptrdiff_t
-
-const LUAI_MAXSTACK = 1000000
-
-# Skipping MacroDefinition: LUA_EXTRASPACE ( sizeof ( void * ) )
-
-const LUA_IDSIZE = 60
-
-# Skipping MacroDefinition: LUAL_BUFFERSIZE ( ( int ) ( 16 * sizeof ( void * ) * sizeof ( lua_Number ) ) )
-
-# const LUAI_MAXALIGN = $(Expr(:toplevel, :(lua_Number(n)), :(Float64(u)), :(Cvoid * s), :(lua_Integer(i)), :(Clong(l))))
-
 const LUA_VERSION_RELEASE = "7"
 
-const LUA_VERSION_NUM = 504
-
 const LUA_VERSION_RELEASE_NUM = LUA_VERSION_NUM * 100 + 7
-
-const LUA_VERSION = "Lua " * LUA_VERSION_MAJOR * "." * LUA_VERSION_MINOR
-
-const LUA_RELEASE = LUA_VERSION * "." * LUA_VERSION_RELEASE
-
-const LUA_COPYRIGHT = LUA_RELEASE * "  Copyright (C) 1994-2024 Lua.org, PUC-Rio"
 
 const LUA_AUTHORS = "R. Ierusalimschy, L. H. de Figueiredo, W. Celes"
 
 const LUA_SIGNATURE = "\eLua"
-
-const LUA_MULTRET = -1
-
-const LUA_REGISTRYINDEX = -LUAI_MAXSTACK - 1000
 
 const LUA_OK = 0
 
@@ -794,8 +766,6 @@ const LUA_ERRRUN = 2
 const LUA_ERRSYNTAX = 3
 
 const LUA_ERRMEM = 4
-
-const LUA_ERRERR = 5
 
 const LUA_TNONE = -1
 
@@ -883,6 +853,8 @@ const LUA_GCGEN = 10
 
 const LUA_GCINC = 11
 
+# Skipping MacroDefinition: LUA_EXTRASPACE ( sizeof ( void * ) )
+
 const LUA_NUMTAGS = LUA_NUMTYPES
 
 const LUA_HOOKCALL = 0
@@ -903,20 +875,88 @@ const LUA_MASKLINE = 1 << LUA_HOOKLINE
 
 const LUA_MASKCOUNT = 1 << LUA_HOOKCOUNT
 
-const LUA_GNAME = "_G"
+const LUAI_IS32INT = UINT_MAX >> 30 >= 3
 
-const LUA_ERRFILE = LUA_ERRERR + 1
+const LUA_INT_INT = 1
 
-const LUA_LOADED_TABLE = "_LOADED"
+const LUA_INT_LONG = 2
 
-const LUA_PRELOAD_TABLE = "_PRELOAD"
+const LUA_INT_LONGLONG = 3
 
-# Skipping MacroDefinition: LUAL_NUMSIZES ( sizeof ( lua_Integer ) * 16 + sizeof ( lua_Number ) )
+const LUA_FLOAT_FLOAT = 1
 
-const LUA_NOREF = -2
+const LUA_FLOAT_DOUBLE = 2
 
-const LUA_REFNIL = -1
+const LUA_FLOAT_LONGDOUBLE = 3
 
-const LUA_FILEHANDLE = "FILE*"
+const LUA_INT_DEFAULT = LUA_INT_LONGLONG
+
+const LUA_FLOAT_DEFAULT = LUA_FLOAT_DOUBLE
+
+const LUA_32BITS = 0
+
+const LUA_C89_NUMBERS = 0
+
+const LUA_INT_TYPE = LUA_INT_DEFAULT
+
+const LUA_FLOAT_TYPE = LUA_FLOAT_DEFAULT
+
+const LUA_PATH_SEP = ";"
+
+const LUA_PATH_MARK = "?"
+
+const LUA_EXEC_DIR = "!"
+
+const LUA_LDIR = "!\\lua\\"
+
+const LUA_CDIR = "!\\"
+
+# Skipping MacroDefinition: LUA_PATH_DEFAULT LUA_LDIR "?.lua;" LUA_LDIR "?\\init.lua;" LUA_CDIR "?.lua;" LUA_CDIR "?\\init.lua;" LUA_SHRDIR "?.lua;" LUA_SHRDIR "?\\init.lua;" ".\\?.lua;" ".\\?\\init.lua"
+
+# Skipping MacroDefinition: LUA_CPATH_DEFAULT LUA_CDIR "?.dll;" LUA_CDIR "..\\lib\\lua\\" LUA_VDIR "\\?.dll;" LUA_CDIR "loadall.dll;" ".\\?.dll"
+
+const LUA_DIRSEP = "\\"
+
+const LUA_IGMARK = "-"
+
+# Skipping MacroDefinition: LUA_API extern
+
+# Skipping MacroDefinition: LUAI_FUNC extern
+
+const LUA_NUMBER_FMT = "%.14g"
+
+const LUAI_UACNUMBER = Float64
+
+const LUA_NUMBER = Float64
+
+const LUA_INTEGER = Clonglong
+
+const LUA_NUMBER_FRMLEN = ""
+
+const LUA_INTEGER_FRMLEN = "ll"
+
+const LUAI_UACINT = LUA_INTEGER
+
+const LUA_UNSIGNED = unsigned(LUAI_UACINT)
+
+const LUA_IDSIZE = 60
+
+const LUA_COLIBNAME = "coroutine"
+
+const LUA_TABLIBNAME = "table"
+
+const LUA_IOLIBNAME = "io"
+
+const LUA_OSLIBNAME = "os"
+
+const LUA_STRLIBNAME = "string"
+
+const LUA_UTF8LIBNAME = "utf8"
+
+const LUA_MATHLIBNAME = "math"
+
+const LUA_DBLIBNAME = "debug"
+
+const LUA_LOADLIBNAME = "package"
 
 end # module
