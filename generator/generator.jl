@@ -15,6 +15,8 @@ args = get_default_args()
 
 headers = [
     joinpath(include_dir, "lua.h"),
+    joinpath(include_dir, "luaconf.h"),
+    joinpath(include_dir, "lualib.h"),
     joinpath(include_dir, "lauxlib.h"),
 ]
 

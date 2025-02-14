@@ -671,6 +671,8 @@ struct luaL_Stream
     closef::lua_CFunction
 end
 
+const UINT_MAX = typemax(Int64)
+
 const LUAI_IS32INT = UINT_MAX >> 30 >= 3
 
 const LUA_INT_INT = 1
@@ -707,13 +709,13 @@ const LUA_VERSION_MAJOR = "5"
 
 const LUA_VERSION_MINOR = "4"
 
-const LUA_VDIR = (LUA_VERSION_MAJOR("."))(LUA_VERSION_MINOR)
+const LUA_VDIR = LUA_VERSION_MAJOR * "." * LUA_VERSION_MINOR
 
 const LUA_LDIR = "!\\lua\\"
 
 const LUA_CDIR = "!\\"
 
-const LUA_SHRDIR = (("!\\..\\share\\lua\\")(LUA_VDIR))("\\")
+const LUA_SHRDIR = "!\\..\\share\\lua\\" * LUA_VDIR * "\\"
 
 # Skipping MacroDefinition: LUA_PATH_DEFAULT LUA_LDIR "?.lua;" LUA_LDIR "?\\init.lua;" LUA_CDIR "?.lua;" LUA_CDIR "?\\init.lua;" LUA_SHRDIR "?.lua;" LUA_SHRDIR "?\\init.lua;" ".\\?.lua;" ".\\?\\init.lua"
 
@@ -725,10 +727,6 @@ const LUA_IGMARK = "-"
 
 # Skipping MacroDefinition: LUA_API extern
 
-const LUALIB_API = LUA_API
-
-const LUAMOD_API = LUA_API
-
 # Skipping MacroDefinition: LUAI_FUNC extern
 
 const LUA_NUMBER_FMT = "%.14g"
@@ -737,7 +735,7 @@ const LUAI_UACNUMBER = Float64
 
 const LUA_NUMBER = Float64
 
-const LUA_MININTEGER = LLONG_MIN
+# const LUA_MININTEGER = LLONG_MIN
 
 const LUA_INTEGER = Clonglong
 
@@ -745,17 +743,17 @@ const LUA_NUMBER_FRMLEN = ""
 
 const LUA_INTEGER_FRMLEN = "ll"
 
-const LUA_INTEGER_FMT = (("%")(LUA_INTEGER_FRMLEN))("d")
+const LUA_INTEGER_FMT = "%" * LUA_INTEGER_FRMLEN * "d"
 
 const LUAI_UACINT = LUA_INTEGER
 
 const LUA_UNSIGNED = unsigned(LUAI_UACINT)
 
-const LUA_MAXINTEGER = LLONG_MAX
+# const LUA_MAXINTEGER = LLONG_MAX
 
-const LUA_MAXUNSIGNED = ULLONG_MAX
+# const LUA_MAXUNSIGNED = ULLONG_MAX
 
-const LUA_KCONTEXT = ptrdiff_t
+# const LUA_KCONTEXT = ptrdiff_t
 
 const LUAI_MAXSTACK = 1000000
 
@@ -765,7 +763,7 @@ const LUA_IDSIZE = 60
 
 # Skipping MacroDefinition: LUAL_BUFFERSIZE ( ( int ) ( 16 * sizeof ( void * ) * sizeof ( lua_Number ) ) )
 
-const LUAI_MAXALIGN = $(Expr(:toplevel, :(lua_Number(n)), :(Float64(u)), :(Cvoid * s), :(lua_Integer(i)), :(Clong(l))))
+# const LUAI_MAXALIGN = $(Expr(:toplevel, :(lua_Number(n)), :(Float64(u)), :(Cvoid * s), :(lua_Integer(i)), :(Clong(l))))
 
 const LUA_VERSION_RELEASE = "7"
 
@@ -773,11 +771,11 @@ const LUA_VERSION_NUM = 504
 
 const LUA_VERSION_RELEASE_NUM = LUA_VERSION_NUM * 100 + 7
 
-const LUA_VERSION = ((("Lua ")(LUA_VERSION_MAJOR))("."))(LUA_VERSION_MINOR)
+const LUA_VERSION = "Lua " * LUA_VERSION_MAJOR * "." * LUA_VERSION_MINOR
 
-const LUA_RELEASE = (LUA_VERSION("."))(LUA_VERSION_RELEASE)
+const LUA_RELEASE = LUA_VERSION * "." * LUA_VERSION_RELEASE
 
-const LUA_COPYRIGHT = LUA_RELEASE("  Copyright (C) 1994-2024 Lua.org, PUC-Rio")
+const LUA_COPYRIGHT = LUA_RELEASE * "  Copyright (C) 1994-2024 Lua.org, PUC-Rio"
 
 const LUA_AUTHORS = "R. Ierusalimschy, L. H. de Figueiredo, W. Celes"
 
