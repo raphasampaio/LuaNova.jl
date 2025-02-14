@@ -4,6 +4,7 @@ output_file_path = "../src/capi.jl"
 module_name = "C"
 jll_pkg_name = "Lua_jll"
 print_using_CEnum = false
+prologue_file_path = "./prologue.jl"
 output_ignorelist = [
     "LUA_VERSION",
     "LUA_RELEASE",
