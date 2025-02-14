@@ -13,12 +13,7 @@ options = load_options(joinpath(@__DIR__, "generator.toml"))
 
 args = get_default_args()
 
-headers = [
-    joinpath(include_dir, "lua.h"),
-    joinpath(include_dir, "luaconf.h"),
-    joinpath(include_dir, "lualib.h"),
-    joinpath(include_dir, "lauxlib.h"),
-]
+headers = [joinpath(include_dir, header) for header in readdir(include_dir) if endswith(header, ".h")]
 
 ctx = create_context(headers, args, options)
 
