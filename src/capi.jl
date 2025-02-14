@@ -919,8 +919,6 @@ const LUA_DIRSEP = "\\"
 
 const LUA_IGMARK = "-"
 
-# Skipping MacroDefinition: LUA_API extern
-
 # Skipping MacroDefinition: LUAI_FUNC extern
 
 const LUA_NUMBER_FMT = "%.14g"
