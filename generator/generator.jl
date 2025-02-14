@@ -1,3 +1,7 @@
+
+import Pkg
+Pkg.instantiate()
+
 using Clang.Generators
 using Lua_jll
 

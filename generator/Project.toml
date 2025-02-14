@@ -3,5 +3,4 @@ Clang = "40e3b903-d033-50b4-a0cc-940c62c95e31"
 Lua_jll = "a4086b1d-a96a-5d6b-8e4f-2030e6f25ba6"
 
 [compat]
-Clang = "0.17"
 Lua_jll = "5.4.7"

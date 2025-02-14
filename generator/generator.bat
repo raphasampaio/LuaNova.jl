@@ -2,4 +2,4 @@
 
 SET BASEPATH=%~dp0
 
-CALL "%JULIA_1113%" --project=%BASEPATH% --interactive --load=%BASEPATH%\generator.jl
+CALL "%JULIA_1113%" --project=%BASEPATH% %BASEPATH%\generator.jl
