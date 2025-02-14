@@ -18,6 +18,8 @@ output_ignorelist = [
     "LUA_MAXUNSIGNED",
     "LUA_KCONTEXT",
     "LUAI_MAXALIGN",
+    "LUALIB_API",
+    "LUAMOD_API",
 ]
 
 [codegen]

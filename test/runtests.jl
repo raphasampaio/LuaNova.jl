@@ -10,7 +10,7 @@ function test_simple_example()
 
     LuaCall.C.luaL_openlibs(L)
 
-    LuaCall.C.luaL_dostring(L, "print('Hello, world!')")
+    @show LuaCall.C.luaL_loadstring(L, "print('Hello, world!')") || LuaCall.C.lua_pcallk(L, 0, -1, 0, 0, 0)
 
     @show LuaCall.C.lua_type(L, Cint(-1))
 
