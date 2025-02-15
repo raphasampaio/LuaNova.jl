@@ -54,8 +54,7 @@ function test_classes()
     LuaCall.C.lua_pushcfunction(L, ptr)
     LuaCall.C.lua_setglobal(L, "mysin")
 
-    @show LuaCall.C.luaL_loadstring(L, "mysin(10)")
-    @show LuaCall.C.lua_pcallk(L, 0, -1, 0, 0, C_NULL)
+    @show safe_script(L, "print(mysin(10))")
 
     # LuaCall.C.lua_createtable(L, 0, 0)
     # LuaCall.C.lua_pushcfunction(L, ptr)
