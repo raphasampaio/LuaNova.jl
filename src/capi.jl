@@ -3,6 +3,8 @@ module C
 using Lua_jll
 export Lua_jll
 
+const UINT_MAX = typemax(Int64)
+
 const lua_Integer = Clonglong
 
 const lua_Number = Cdouble
@@ -715,8 +717,6 @@ function luaL_openlibs(L)
     @ccall liblua.luaL_openlibs(L::Ptr{lua_State})::Cvoid
 end
 
-const UINT_MAX = typemax(Int64)
-
 const LUA_GNAME = "_G"
 
 const LUA_ERRERR = 5
@@ -956,5 +956,9 @@ const LUA_MATHLIBNAME = "math"
 const LUA_DBLIBNAME = "debug"
 
 const LUA_LOADLIBNAME = "package"
+
+lua_tonumber(L, i) = lua_tonumberx(L, (i), C_NULL)
+
+lua_pushcfunction(L, f) = lua_pushcclosure(L, (f), 0)
 
 end # module
