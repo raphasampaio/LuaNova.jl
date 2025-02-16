@@ -46,7 +46,7 @@ function (cb::LuaCallback)(L::Ptr{Cvoid})::Cint
     args = Float64[]
     for i in 1:nargs
         if C.lua_isnumber(L, i) != 0
-            push!(args, lua_tonumber(L, i))
+            push!(args, C.lua_tonumber(L, i))
         else
             error("Argument $i is not a number in Lua call")
         end
@@ -81,31 +81,53 @@ end
 # ---------------------------------------------------------
 # 4) The finalize function that registers in Lua
 # ---------------------------------------------------------
-function finalize_lua_registration(func_name::Symbol)
-    # If no entries in the cache, do nothing
+function finalize_lua_registration(L, func_name::Symbol)
     if !haskey(CACHE, func_name)
         return
     end
 
-    for (signature_type, function_wrapper) in CACHE[func_name]
-        return_type = function_wrapper.return_type
-        julia_func  = function_wrapper.f
+    for (signature_type, fw) in CACHE[func_name]
+        @show fw
+        # `fw` is a FunctionWrapper{R, A}
+        R, A = typeof(fw).parameters  # R is the return type, A is the arg-types tuple
 
-        # Create a Lua-friendly name
-        lua_name = string(
+        # For example, we might build a Lua-friendly name:
+        @show lua_name = string(
             func_name, "_",
-            join([string(t) for t in signature_type.parameters], "_")
+            join([string(t) for t in A.parameters], "_")
         )
 
-        # Build a cfunction pointer using our factory
-        ptr = lua_cfunction_factory(signature_type, return_type, julia_func)
+        # Now, to *call* the function, use `fw(...)` directly:
+        #   result = fw(x, y, ...)
+        #
+        # For registering with Lua, you can still do an @cfunction of an anonymous closure:
+        ptr = @cfunction(
+            (L::Ptr{Cvoid}) -> begin
+                nargs = C.lua_gettop(L)
+                args = Float64[]  # example
+                for i in 1:nargs
+                    if C.lua_isnumber(L, i) != 0
+                        push!(args, C.lua_tonumber(L, i))
+                    else
+                        error("Argument $i is not a number in Lua call")
+                    end
+                end
+                # Call the FunctionWrapper itself
+                @show fw
+                result = fw(args...)
 
-        # Register it in Lua
+                # push the result
+                C.lua_pushnumber(L, result)
+                return 1
+            end,
+            Cint, (Ptr{Cvoid},)
+        )
+
+        # Finish registration
         C.lua_pushcfunction(L, ptr)
         C.lua_setglobal(L, lua_name)
     end
-
-    return nothing
 end
+
 
 end

@@ -78,10 +78,6 @@ function myadd(x::Float64, y::Float64)
 end
 
 function test_macro()
-    @show L = LuaCall.C.luaL_newstate()
-
-    LuaCall.C.luaL_openlibs(L)
-
     lua_register(
         :add,
         Float64,
@@ -89,7 +85,14 @@ function test_macro()
         myadd
     )
 
-    finalize_lua_registration(:add)
+    @show L = LuaCall.C.luaL_newstate()
+    LuaCall.C.luaL_openlibs(L)
+
+    @show safe_script(L, "print(\"Hello, world!\")")
+
+    finalize_lua_registration(L, :add)
+
+    @show safe_script(L, "print(add_Float64_Float64(1, 2))")
 
     # @show registered_func = LuaCall.CACHE[:add][Tuple{Float64, Float64}]
     # result = registered_func(1.0, 2.5)
