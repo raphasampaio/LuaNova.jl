@@ -4,6 +4,7 @@ using Aqua
 using Test
 
 include("aqua.jl")
+include("macro.jl")
 
 function test_simple_example()
     @show L = LuaCall.C.luaL_newstate()
@@ -26,9 +27,6 @@ function test_simple_example()
     
     return nothing
 end
-
-
-
 
 
 # function myobject_new(L::Ptr{Cvoid})::Cint
@@ -75,73 +73,8 @@ function test_classes()
     LuaCall.C.lua_close(L)
 end
 
-macro register_lua_function(lua_state, julia_function, lua_function_name)
-    # Get function signature and argument types
-    @show func_info = Base.unwrap_unionall(typeof(eval(julia_function)).name.wrapper)
-    @show arg_types = func_info.parameters[1:end-1]  # Remove return type
-
-    # Generate a wrapper function name
-    @show wrapper_name = Symbol(:lua_wrapper_, julia_function)
-
-    # # Argument conversion logic
-    # conversion_exprs = []
-    # for (i, arg_type) in enumerate(arg_types)
-    #     push!(conversion_exprs, quote
-    #         local arg_$i
-    #         if $arg_type == Float64
-    #             arg_$i = lua_tonumber(L, $i)
-    #         elseif $arg_type == String
-    #             arg_$i = lua_tolstring(L, $i)
-    #         else
-    #             error("Unsupported Lua to Julia type conversion for argument $i")
-    #         end
-    #     end)
-    # end
-
-    # # Create call expression dynamically
-    # call_expr = Expr(:call, julia_function, [Symbol(:arg_, i) for i in 1:length(arg_types)]...)
-
-    # # Push return value logic
-    # return_expr = quote
-    #     local result = $call_expr
-    #     if result isa Float64
-    #         lua_pushnumber(L, result)
-    #     elseif result isa String
-    #         lua_pushstring(L, result)
-    #     else
-    #         error("Unsupported return type")
-    #     end
-    # end
-
-    # quote
-    #     function $wrapper_name(L::Ptr{Cvoid})::Cint
-    #         local num_args = lua_gettop(L)
-    #         if num_args != $(length(arg_types))
-    #             error("Incorrect number of arguments. Expected $(length(arg_types)), got ", num_args)
-    #         end
-            
-    #         $(Expr(:block, conversion_exprs...))
-
-    #         $return_expr
-
-    #         return 1  # Returning one value to Lua
-    #     end
-
-    #     # Convert Julia function to C function pointer
-    #     f_ptr = @cfunction($wrapper_name, Cint, (Ptr{Cvoid},))
-
-    #     # Push function and register it in Lua
-    #     lua_pushcfunction($lua_state, f_ptr)
-    #     lua_setglobal($lua_state, $lua_function_name)
-    # end
-end
-
-function add(a::Float64, b::Float64)
-    return a + b
-end
-
-function greet(name::String)
-    return "Hello, " * name
+function myadd(x::Float64, y::Float64)
+    return x + y
 end
 
 function test_macro()
@@ -149,7 +82,25 @@ function test_macro()
 
     LuaCall.C.luaL_openlibs(L)
 
-    @register_lua_function L add "lua_add"
+    lua_register(
+        :add,
+        Float64,
+        [Float64, Float64],
+        myadd
+    )
+
+    finalize_lua_registration(:add)
+
+    # @show registered_func = LuaCall.CACHE[:add][Tuple{Float64, Float64}]
+    # result = registered_func(1.0, 2.5)
+    # @show result  # 3.5
+
+#     registered_func = REGISTERED_FUNCTIONS[:add]
+# result = registered_func(1.0, 2.5)
+# @show result  # 3.5
+    
+    # finalize_lua_registration(:add)
+
     # @register_lua_function L greet "lua_greet"
 
     LuaCall.C.lua_close(L)
