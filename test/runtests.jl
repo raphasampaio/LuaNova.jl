@@ -73,8 +73,14 @@ function test_classes()
     LuaCall.C.lua_close(L)
 end
 
-function myadd(x::Float64, y::Float64)
-    return x + y
+@lua function foo(x::Float64)
+    println(x)
+    return 0
+end
+
+@lua function foo(x::String)
+    println(x)
+    return 0
 end
 
 function test_macro()

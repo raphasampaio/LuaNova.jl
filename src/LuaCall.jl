@@ -97,6 +97,8 @@ function finalize_lua_registration(L, func_name::Symbol)
             join([string(t) for t in A.parameters], "_")
         )
 
+        let function_wrapper = fw
+
         # Now, to *call* the function, use `fw(...)` directly:
         #   result = fw(x, y, ...)
         #
@@ -113,8 +115,7 @@ function finalize_lua_registration(L, func_name::Symbol)
                     end
                 end
                 # Call the FunctionWrapper itself
-                @show fw
-                result = fw(args...)
+                result = function_wrapper(args...)
 
                 # push the result
                 C.lua_pushnumber(L, result)
@@ -126,6 +127,7 @@ function finalize_lua_registration(L, func_name::Symbol)
         # Finish registration
         C.lua_pushcfunction(L, ptr)
         C.lua_setglobal(L, lua_name)
+        end
     end
 end
 
