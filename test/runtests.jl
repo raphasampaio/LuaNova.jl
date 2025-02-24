@@ -1,132 +1,164 @@
 using LuaCall
 
-using Aqua
-using Test
-
-include("aqua.jl")
-include("macro.jl")
-
-function test_simple_example()
-    @show L = LuaCall.C.luaL_newstate()
-
-    LuaCall.C.luaL_openlibs(L)
-
-    @show LuaCall.C.luaL_loadstring(L, "print(1 + 10)")
-    
-    @show LuaCall.C.lua_pcallk(L, 0, -1, 0, 0, C_NULL)
-
-    # lua_pcall(L, 0, LUA_MULTRET, 0))
-    # lua_pcall(L,n,r,f)
-    # (L, (n), (r), (f), 0, NULL)
-
-    # @show LuaCall.C.lua_type(L, Cint(-1))
-
-    # @show LuaCall.C.lua_tostring(L, Cint(-1))
-
-    LuaCall.C.lua_close(L)
-    
-    return nothing
-end
-
-
-# function myobject_new(L::Ptr{Cvoid})::Cint
-#     x = LuaCall.C.luaL_checknumber(L, 1)
-#     p = LuaCall.C.lua_newuserdata(L, sizeof(Cvoid))
-#     LuaCall.C.luaL_setmetatable(L, "MyObject")
-#     return 1
-# end
-
-function l_sin(L::Ptr{Cvoid})::Cint
-    d = LuaCall.C.lua_tonumber(L, 1)
-    LuaCall.C.lua_pushnumber(L, sin(d))
-    return 1
-end
-
-function test_classes()
-    @show L = LuaCall.C.luaL_newstate()
-
-    LuaCall.C.luaL_openlibs(L)
-
-    ptr = @cfunction(l_sin, Cint, (Ptr{Cvoid},))
-
-    LuaCall.C.lua_pushcfunction(L, ptr)
-    LuaCall.C.lua_setglobal(L, "mysin")
-
-    @show safe_script(L, "print(mysin(10))")
-
-    # LuaCall.C.lua_createtable(L, 0, 0)
-    # LuaCall.C.lua_pushcfunction(L, ptr)
-    # # LuaCall.C.lua_setfield(l, -2, "new")
-    # # LuaCall.C.lua_setglobal(l, "MyObject")
-
-    # # LuaCall.C.lua_register(L, "MyObject", ptr)
-
-    # # lua_register(L, LUA_MYOBJECT, myobject_new);
-	# # luaL_newmetatable(L, LUA_MYOBJECT);
-	# # lua_pushcfunction(L, myobject_delete); lua_setfield(L, -2, "__gc");
-	# # lua_pushvalue(L, -1); lua_setfield(L, -2, "__index");
-	# # lua_pushcfunction(L, myobject_set); lua_setfield(L, -2, "set");
-	# # lua_pushcfunction(L, myobject_get); lua_setfield(L, -2, "get");
-	# # lua_pop(L, 1);
-
-
-    LuaCall.C.lua_close(L)
-end
-
+# Define two overloaded functions for the same name `foo`
 @lua function foo(x::Float64)
-    println(x)
-    return 0
+    println("foo(Float64) called with x = $x")
+    return 100
 end
 
 @lua function foo(x::String)
-    println(x)
-    return 0
+    println("foo(String) called with x = $x")
+    return 200
 end
 
-function test_macro()
-    lua_register(
-        :add,
-        Float64,
-        [Float64, Float64],
-        myadd
-    )
+# Now from Julia's side, you can call `foo(...)` as normal:
+foo(3.14)   # calls the Float64 method
+foo("Hello")  # calls the String method
 
-    @show L = LuaCall.C.luaL_newstate()
-    LuaCall.C.luaL_openlibs(L)
+# From Lua's side, your single global 'foo' dispatches on the argument type.
+# E.g., you might do something like:
+lua_code = """
+print("Calling foo from Lua with number:")
+print(foo(42.0))
 
-    @show safe_script(L, "print(\"Hello, world!\")")
+print("Calling foo from Lua with string:")
+print(foo("A string from Lua"))
+"""
 
-    finalize_lua_registration(L, :add)
+# # Load and run the Lua code
+# LuaCall.C.luaL_loadstring(LuaCall.L, lua_code)
+# LuaCall.C.lua_pcall(LuaCall.L, 0, 0, 0)
 
-    @show safe_script(L, "print(add_Float64_Float64(1, 2))")
+# # Finally, close the Lua state when you're done
+# LuaCall.C.lua_close(LuaCall.L)
 
-    # @show registered_func = LuaCall.CACHE[:add][Tuple{Float64, Float64}]
-    # result = registered_func(1.0, 2.5)
-    # @show result  # 3.5
+# using Aqua
+# using Test
 
-#     registered_func = REGISTERED_FUNCTIONS[:add]
-# result = registered_func(1.0, 2.5)
-# @show result  # 3.5
+# include("aqua.jl")
+# include("macro.jl")
+
+# function test_simple_example()
+#     @show L = LuaCall.C.luaL_newstate()
+
+#     LuaCall.C.luaL_openlibs(L)
+
+#     @show LuaCall.C.luaL_loadstring(L, "print(1 + 10)")
     
-    # finalize_lua_registration(:add)
+#     @show LuaCall.C.lua_pcallk(L, 0, -1, 0, 0, C_NULL)
 
-    # @register_lua_function L greet "lua_greet"
+#     # lua_pcall(L, 0, LUA_MULTRET, 0))
+#     # lua_pcall(L,n,r,f)
+#     # (L, (n), (r), (f), 0, NULL)
 
-    LuaCall.C.lua_close(L)
-end
+#     # @show LuaCall.C.lua_type(L, Cint(-1))
 
-function test_all()
-    # @testset "Aqua.jl" begin
-    #     test_aqua()
-    # end
+#     # @show LuaCall.C.lua_tostring(L, Cint(-1))
 
-    # test_simple_example()
+#     LuaCall.C.lua_close(L)
+    
+#     return nothing
+# end
 
-    # test_classes()
 
-    test_macro()
+# # function myobject_new(L::Ptr{Cvoid})::Cint
+# #     x = LuaCall.C.luaL_checknumber(L, 1)
+# #     p = LuaCall.C.lua_newuserdata(L, sizeof(Cvoid))
+# #     LuaCall.C.luaL_setmetatable(L, "MyObject")
+# #     return 1
+# # end
 
-    return nothing
-end
+# function l_sin(L::Ptr{Cvoid})::Cint
+#     d = LuaCall.C.lua_tonumber(L, 1)
+#     LuaCall.C.lua_pushnumber(L, sin(d))
+#     return 1
+# end
 
-test_all()
+# function test_classes()
+#     @show L = LuaCall.C.luaL_newstate()
+
+#     LuaCall.C.luaL_openlibs(L)
+
+#     ptr = @cfunction(l_sin, Cint, (Ptr{Cvoid},))
+
+#     LuaCall.C.lua_pushcfunction(L, ptr)
+#     LuaCall.C.lua_setglobal(L, "mysin")
+
+#     @show safe_script(L, "print(mysin(10))")
+
+#     # LuaCall.C.lua_createtable(L, 0, 0)
+#     # LuaCall.C.lua_pushcfunction(L, ptr)
+#     # # LuaCall.C.lua_setfield(l, -2, "new")
+#     # # LuaCall.C.lua_setglobal(l, "MyObject")
+
+#     # # LuaCall.C.lua_register(L, "MyObject", ptr)
+
+#     # # lua_register(L, LUA_MYOBJECT, myobject_new);
+# 	# # luaL_newmetatable(L, LUA_MYOBJECT);
+# 	# # lua_pushcfunction(L, myobject_delete); lua_setfield(L, -2, "__gc");
+# 	# # lua_pushvalue(L, -1); lua_setfield(L, -2, "__index");
+# 	# # lua_pushcfunction(L, myobject_set); lua_setfield(L, -2, "set");
+# 	# # lua_pushcfunction(L, myobject_get); lua_setfield(L, -2, "get");
+# 	# # lua_pop(L, 1);
+
+
+#     LuaCall.C.lua_close(L)
+# end
+
+# @lua function foo(x::Float64)
+#     println(x)
+#     return 0
+# end
+
+# @lua function foo(x::String)
+#     println(x)
+#     return 0
+# end
+
+# function test_macro()
+#     lua_register(
+#         :add,
+#         Float64,
+#         [Float64, Float64],
+#         myadd
+#     )
+
+#     @show L = LuaCall.C.luaL_newstate()
+#     LuaCall.C.luaL_openlibs(L)
+
+#     @show safe_script(L, "print(\"Hello, world!\")")
+
+#     finalize_lua_registration(L, :add)
+
+#     @show safe_script(L, "print(add_Float64_Float64(1, 2))")
+
+#     # @show registered_func = LuaCall.CACHE[:add][Tuple{Float64, Float64}]
+#     # result = registered_func(1.0, 2.5)
+#     # @show result  # 3.5
+
+# #     registered_func = REGISTERED_FUNCTIONS[:add]
+# # result = registered_func(1.0, 2.5)
+# # @show result  # 3.5
+    
+#     # finalize_lua_registration(:add)
+
+#     # @register_lua_function L greet "lua_greet"
+
+#     LuaCall.C.lua_close(L)
+# end
+
+# function test_all()
+#     # @testset "Aqua.jl" begin
+#     #     test_aqua()
+#     # end
+
+#     # test_simple_example()
+
+#     # test_classes()
+
+#     test_macro()
+
+#     return nothing
+# end
+
+# test_all()
