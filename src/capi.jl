@@ -961,4 +961,6 @@ lua_tonumber(L, i) = lua_tonumberx(L, (i), C_NULL)
 
 lua_pushcfunction(L, f) = lua_pushcclosure(L, (f), 0)
 
+lua_tostring(L,i) = lua_tolstring(L, (i), C_NULL)
+
 end # module
