@@ -1,4 +1,4 @@
-module LuaCall
+module Lua
 
 export from_lua, to_lua, @lua, @push_lua_function
 
@@ -13,10 +13,12 @@ macro lua(func_def)
     return esc(quote
         $func_def
 
-        function $function_name(L::Ptr{Cvoid})::Cint
-            args = LuaCall.from_lua(L)
-            result = $function_name(args...)
-            return LuaCall.to_lua(L, result)
+        if !hasmethod($function_name, Tuple{Ptr{Cvoid}})
+            function $function_name(L::Ptr{Cvoid})::Cint
+                args = Lua.from_lua(L)
+                result = $function_name(args...)
+                return Lua.to_lua(L, result)
+            end
         end
     end)
 end
@@ -24,8 +26,8 @@ end
 macro push_lua_function(L, lua_function, julia_function)
     return esc(quote
         f = @cfunction($julia_function, Cint, (Ptr{Cvoid},))
-        LuaCall.C.lua_pushcfunction($L, f)
-        LuaCall.C.lua_setglobal($L, $lua_function)
+        Lua.C.lua_pushcfunction($L, f)
+        Lua.C.lua_setglobal($L, $lua_function)
     end)
 end
 
