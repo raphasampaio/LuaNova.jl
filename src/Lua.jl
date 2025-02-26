@@ -5,6 +5,7 @@ export from_lua, to_lua, @lua, @push_lua_function
 include("capi.jl")
 import .C
 
+include("intermediate.jl")
 include("state.jl")
 
 macro lua(func_def)

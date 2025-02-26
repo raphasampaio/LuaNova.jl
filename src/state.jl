@@ -1,17 +1,3 @@
-function new_state()
-    return C.luaL_newstate()
-end
-
-function open_libs(L::Ptr{C.lua_State})
-    C.luaL_openlibs(L)
-    return nothing
-end
-
-function close(L::Ptr{C.lua_State})
-    C.lua_close(L)
-    return nothing
-end
-
 function safe_script(L, str::String)
     return C.luaL_loadstring(L, str) == 1 || C.lua_pcallk(L, 0, Int32(C.LUA_MULTRET), 0, 0, C_NULL) == 1
 end

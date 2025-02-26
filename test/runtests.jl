@@ -14,17 +14,12 @@ function test_capi()
     Lua.open_libs(L)
 
     Lua.C.lua_pushcfunction(L, @cfunction(mysin, Cint, (Ptr{Cvoid},)))
-    Lua.C.lua_setglobal(L, "mysin")
+    Lua.C.lua_setglobal(L, "sin")
 
-    Lua.C.lua_getglobal(L, "mysin")
-    Lua.C.lua_pushnumber(L, 1)
-
-    if Lua.C.lua_pcallk(L, 1, 1, 0, 0, C_NULL) != 0
-        error("Error calling mysin: ", Lua.C.lua_tostring(L, -1))
-    end
-
-    result = Lua.C.lua_tonumber(L, -1)
-
+    Lua.get_global(L, "sin")
+    Lua.push_number(L, 1)
+    Lua.protected_call(L, 1)
+    result = Lua.to_number(L, -1)
     @test result ≈ sin(1)
 
     Lua.close(L)
@@ -46,8 +41,19 @@ function test_macros()
 
     @push_lua_function(L, "sum", mysum)
 
-    Lua.safe_script(L, "print(sum(1, 1))")
-    Lua.safe_script(L, "print(sum('a', 'b'))")
+    Lua.C.lua_getglobal(L, "sum")
+    Lua.C.lua_pushnumber(L, 1)
+    Lua.C.lua_pushnumber(L, 2)
+    Lua.protected_call(L, 2)
+    result = Lua.to_number(L, -1)
+    @test result == 3
+
+    Lua.C.lua_getglobal(L, "sum")
+    Lua.C.lua_pushstring(L, "a")
+    Lua.C.lua_pushstring(L, "b")
+    Lua.protected_call(L, 2)
+    result = Lua.to_string(L, -1)
+    @test result == "ab"
 
     Lua.close(L)
 
