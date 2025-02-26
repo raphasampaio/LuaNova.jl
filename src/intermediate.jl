@@ -36,3 +36,13 @@ function get_global(L::Ptr{C.lua_State}, name::String)
     C.lua_getglobal(L, name)
     return nothing
 end
+
+function set_global(L::Ptr{C.lua_State}, name::String)
+    C.lua_setglobal(L, name)
+    return nothing
+end
+
+function push_cfunction(L::Ptr{C.lua_State}, f::Ptr{Nothing})
+    C.lua_pushcfunction(L, f)
+    return nothing
+end

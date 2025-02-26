@@ -3,6 +3,8 @@ using Lua
 using Aqua
 using Test
 
+include("aqua.jl")
+
 function mysin(L::Ptr{Cvoid})::Cint
     d = Lua.C.lua_tonumber(L, 1)
     Lua.C.lua_pushnumber(L, sin(d))
@@ -13,8 +15,8 @@ function test_capi()
     L = Lua.new_state()
     Lua.open_libs(L)
 
-    Lua.C.lua_pushcfunction(L, @cfunction(mysin, Cint, (Ptr{Cvoid},)))
-    Lua.C.lua_setglobal(L, "sin")
+    Lua.push_cfunction(L, @cfunction(mysin, Cint, (Ptr{Cvoid},)))
+    Lua.set_global(L, "sin")
 
     Lua.get_global(L, "sin")
     Lua.push_number(L, 1)
@@ -61,6 +63,10 @@ function test_macros()
 end
 
 function test_all()
+    @testset "Aqua" begin
+        test_aqua()
+    end
+
     @testset "C API" begin
         test_capi()
     end
