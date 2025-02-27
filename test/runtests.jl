@@ -43,16 +43,16 @@ function test_macros()
 
     @push_lua_function(L, "sum", mysum)
 
-    Lua.C.lua_getglobal(L, "sum")
-    Lua.C.lua_pushnumber(L, 1)
-    Lua.C.lua_pushnumber(L, 2)
+    Lua.get_global(L, "sum")
+    Lua.push_number(L, 1)
+    Lua.push_number(L, 2)
     Lua.protected_call(L, 2)
     result = Lua.to_number(L, -1)
     @test result == 3
 
-    Lua.C.lua_getglobal(L, "sum")
-    Lua.C.lua_pushstring(L, "a")
-    Lua.C.lua_pushstring(L, "b")
+    Lua.get_global(L, "sum")
+    Lua.push_string(L, "a")
+    Lua.push_string(L, "b")
     Lua.protected_call(L, 2)
     result = Lua.to_string(L, -1)
     @test result == "ab"

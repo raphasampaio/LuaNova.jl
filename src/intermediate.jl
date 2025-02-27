@@ -13,7 +13,7 @@ function close(L::Ptr{C.lua_State})
 end
 
 function protected_call(L::Ptr{C.lua_State}, nargs::Integer)
-    if Lua.C.lua_pcallk(L, nargs, 1, 0, 0, C_NULL) != 0
+    if C.lua_pcallk(L, nargs, 1, 0, 0, C_NULL) != 0
         error("Error calling: ", to_string(L, -1))
     end
     return nothing
@@ -29,6 +29,11 @@ end
 
 function push_number(L::Ptr{C.lua_State}, x::Number)
     C.lua_pushnumber(L, x)
+    return nothing
+end
+
+function push_string(L::Ptr{C.lua_State}, x::String)
+    C.lua_pushstring(L, x)
     return nothing
 end
 
