@@ -29,13 +29,15 @@ function test_capi()
     return nothing
 end
 
-@lua function mysum(a::Float64, b::Float64)
+function mysum(a::Float64, b::Float64)
     return a + b
 end
 
-@lua function mysum(a::String, b::String)
+function mysum(a::String, b::String)
     return a * b
 end
+
+@define_lua_function mysum
 
 function test_macros()
     L = Lua.new_state()

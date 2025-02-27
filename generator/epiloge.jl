@@ -25,8 +25,7 @@ lua_pushcfunction(L, f) = lua_pushcclosure(L, (f), 0)
 #define lua_pushglobaltable(L)  \
 # ((void)lua_rawgeti(L, LUA_REGISTRYINDEX, LUA_RIDX_GLOBALS))
 
-lua_tostring(L,i) = lua_tolstring(L, (i), C_NULL)
-
+lua_tostring(L, i) = lua_tolstring(L, (i), C_NULL)
 
 #define lua_insert(L,idx)	lua_rotate(L, (idx), 1)
 

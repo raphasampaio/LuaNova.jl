@@ -108,7 +108,7 @@ function Base.getproperty(x::var"union (unnamed at C:\\Users\\rsampaio\\.julia\\
 end
 
 function Base.setproperty!(x::Ptr{var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)"}, f::Symbol, v)
-    unsafe_store!(getproperty(x, f), v)
+    return unsafe_store!(getproperty(x, f), v)
 end
 
 struct luaL_Buffer
@@ -132,7 +132,7 @@ function Base.getproperty(x::luaL_Buffer, f::Symbol)
 end
 
 function Base.setproperty!(x::Ptr{luaL_Buffer}, f::Symbol, v)
-    unsafe_store!(getproperty(x, f), v)
+    return unsafe_store!(getproperty(x, f), v)
 end
 
 function luaL_prepbuffsize(B, sz)
@@ -961,6 +961,6 @@ lua_tonumber(L, i) = lua_tonumberx(L, (i), C_NULL)
 
 lua_pushcfunction(L, f) = lua_pushcclosure(L, (f), 0)
 
-lua_tostring(L,i) = lua_tolstring(L, (i), C_NULL)
+lua_tostring(L, i) = lua_tolstring(L, (i), C_NULL)
 
 end # module

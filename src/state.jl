@@ -4,12 +4,12 @@ end
 
 function from_lua(L::Ptr{Cvoid})
     num_args = C.lua_gettop(L)
-    
+
     args = Any[]
     for i in 1:num_args
         lua_typecode = C.lua_type(L, i)
         type_name = unsafe_string(C.lua_typename(L, lua_typecode))
-        
+
         if lua_typecode == C.LUA_TNUMBER
             push!(args, C.lua_tonumber(L, i))
         elseif lua_typecode == C.LUA_TSTRING
@@ -28,6 +28,7 @@ end
 
 function to_lua(L::Ptr{Cvoid}, x::Any)
     error("Unsupported return type: ", typeof(x))
+    return nothing
 end
 
 function to_lua(L::Ptr{Cvoid}, x::Float64)
