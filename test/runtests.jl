@@ -1,4 +1,4 @@
-using Lua
+using LuaNova
 
 using Aqua
 using Test
@@ -6,25 +6,25 @@ using Test
 include("aqua.jl")
 
 function mysin(L::Ptr{Cvoid})::Cint
-    d = Lua.C.lua_tonumber(L, 1)
-    Lua.C.lua_pushnumber(L, sin(d))
+    d = LuaNova.C.lua_tonumber(L, 1)
+    LuaNova.C.lua_pushnumber(L, sin(d))
     return 1
 end
 
 function test_capi()
-    L = Lua.new_state()
-    Lua.open_libs(L)
+    L = LuaNova.new_state()
+    LuaNova.open_libs(L)
 
-    Lua.push_cfunction(L, @cfunction(mysin, Cint, (Ptr{Cvoid},)))
-    Lua.set_global(L, "sin")
+    LuaNova.push_cfunction(L, @cfunction(mysin, Cint, (Ptr{Cvoid},)))
+    LuaNova.set_global(L, "sin")
 
-    Lua.get_global(L, "sin")
-    Lua.push_number(L, 1)
-    Lua.protected_call(L, 1)
-    result = Lua.to_number(L, -1)
+    LuaNova.get_global(L, "sin")
+    LuaNova.push_number(L, 1)
+    LuaNova.protected_call(L, 1)
+    result = LuaNova.to_number(L, -1)
     @test result ≈ sin(1)
 
-    Lua.close(L)
+    LuaNova.close(L)
 
     return nothing
 end
@@ -40,26 +40,26 @@ end
 @define_lua_function mysum
 
 function test_macros()
-    L = Lua.new_state()
-    Lua.open_libs(L)
+    L = LuaNova.new_state()
+    LuaNova.open_libs(L)
 
     @push_lua_function(L, "sum", mysum)
 
-    Lua.get_global(L, "sum")
-    Lua.push_number(L, 1)
-    Lua.push_number(L, 2)
-    Lua.protected_call(L, 2)
-    result = Lua.to_number(L, -1)
+    LuaNova.get_global(L, "sum")
+    LuaNova.push_number(L, 1)
+    LuaNova.push_number(L, 2)
+    LuaNova.protected_call(L, 2)
+    result = LuaNova.to_number(L, -1)
     @test result == 3
 
-    Lua.get_global(L, "sum")
-    Lua.push_string(L, "a")
-    Lua.push_string(L, "b")
-    Lua.protected_call(L, 2)
-    result = Lua.to_string(L, -1)
+    LuaNova.get_global(L, "sum")
+    LuaNova.push_string(L, "a")
+    LuaNova.push_string(L, "b")
+    LuaNova.protected_call(L, 2)
+    result = LuaNova.to_string(L, -1)
     @test result == "ab"
 
-    Lua.close(L)
+    LuaNova.close(L)
 
     return nothing
 end
