@@ -65,3 +65,18 @@ function push_cfunction(L::LuaState, f::Ptr{Nothing})
     C.lua_pushcfunction(L, f)
     return nothing
 end
+
+function new_table(L::LuaState)
+    C.lua_createtable(L, 0, 0)
+    return nothing
+end
+
+function set_table(L::LuaState, idx::Integer)
+    C.lua_settable(L, idx)
+    return nothing
+end
+
+function get_table(L::LuaState, idx::Integer)
+    C.lua_gettable(L, idx)
+    return nothing
+end

@@ -75,6 +75,40 @@ function test_macros()
     return nothing
 end
 
+function test_table()
+    L = LuaNova.new_state()
+    LuaNova.open_libs(L)
+
+    LuaNova.new_table(L)
+    LuaNova.push_string(L, "key")
+    LuaNova.push_number(L, 42)
+    LuaNova.set_table(L, -3)
+
+    LuaNova.push_string(L, "key")
+    LuaNova.get_table(L, -2)
+    result = LuaNova.to_number(L, -1)
+    @test result == 42
+
+    LuaNova.close(L)
+
+    return nothing
+end
+
+# function test_error_handling()
+#     L = LuaNova.new_state()
+#     LuaNova.open_libs(L)
+
+#     LuaNova.push_string(L, "error('test error')")
+#     if LuaNova.protected_call(L, 0) != 0
+#         error_msg = LuaNova.to_string(L, -1)
+#         @test occursin("test error", error_msg)
+#     end
+
+#     LuaNova.close(L)
+
+#     return nothing
+# end
+
 function test_all()
     @testset "Aqua" begin
         test_aqua()
@@ -87,6 +121,14 @@ function test_all()
     @testset "Macros" begin
         test_macros()
     end
+
+    @testset "Table" begin
+        test_table()
+    end
+
+    # @testset "Error Handling" begin
+    #     test_error_handling()
+    # end
 
     return nothing
 end
