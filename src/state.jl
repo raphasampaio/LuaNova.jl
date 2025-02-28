@@ -1,8 +1,8 @@
-function safe_script(L, str::String)
+function safe_script(L::LuaState, str::String)
     return C.luaL_loadstring(L, str) == 1 || C.lua_pcallk(L, 0, Int32(C.LUA_MULTRET), 0, 0, C_NULL) == 1
 end
 
-function from_lua(L::Ptr{Cvoid})
+function from_lua(L::LuaState)
     num_args = C.lua_gettop(L)
 
     args = Vector{Any}(undef, num_args)
@@ -26,17 +26,22 @@ function from_lua(L::Ptr{Cvoid})
     return args
 end
 
-function to_lua(L::Ptr{Cvoid}, x::Any)
+function to_lua(L::LuaState, x::Any)
     error("Unsupported return type: ", typeof(x))
     return nothing
 end
 
-function to_lua(L::Ptr{Cvoid}, x::Float64)
-    C.lua_pushnumber(L, x)
+function to_lua(L::LuaState, x::Real)
+    push_number(L, x)
     return 1
 end
 
-function to_lua(L::Ptr{Cvoid}, x::String)
-    C.lua_pushstring(L, x)
+function to_lua(L::LuaState, x::String)
+    push_string(L, x)
+    return 1
+end
+
+function to_lua(L::LuaState, x::Bool)
+    push_boolean(L, x)
     return 1
 end

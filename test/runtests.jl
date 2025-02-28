@@ -37,6 +37,10 @@ function mysum(a::String, b::String)
     return a * b
 end
 
+function mysum(a::Bool, b::Bool)
+    return a && b
+end
+
 @define_lua_function mysum
 
 function test_macros()
@@ -58,6 +62,13 @@ function test_macros()
     LuaNova.protected_call(L, 2)
     result = LuaNova.to_string(L, -1)
     @test result == "ab"
+
+    LuaNova.get_global(L, "sum")
+    LuaNova.push_boolean(L, true)
+    LuaNova.push_boolean(L, false)
+    LuaNova.protected_call(L, 2)
+    result = LuaNova.to_boolean(L, -1)
+    @test result == false
 
     LuaNova.close(L)
 
