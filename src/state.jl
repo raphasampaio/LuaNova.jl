@@ -5,19 +5,19 @@ end
 function from_lua(L::Ptr{Cvoid})
     num_args = C.lua_gettop(L)
 
-    args = Any[]
+    args = Vector{Any}(undef, num_args)
     for i in 1:num_args
-        lua_typecode = C.lua_type(L, i)
-        type_name = unsafe_string(C.lua_typename(L, lua_typecode))
+        type_code = C.lua_type(L, i)
+        type_name = unsafe_string(C.lua_typename(L, type_code))
 
-        if lua_typecode == C.LUA_TNUMBER
-            push!(args, C.lua_tonumber(L, i))
-        elseif lua_typecode == C.LUA_TSTRING
-            push!(args, unsafe_string(C.lua_tostring(L, i)))
-        elseif lua_typecode == C.LUA_TBOOLEAN
-            push!(args, C.lua_toboolean(L, i) != 0)
-        elseif lua_typecode == C.LUA_TNIL
-            push!(args, nothing)
+        if type_code == C.LUA_TNUMBER
+            args[i] = C.lua_tonumber(L, i)
+        elseif type_code == C.LUA_TSTRING
+            args[i] = unsafe_string(C.lua_tostring(L, i))
+        elseif type_code == C.LUA_TBOOLEAN
+            args[i] = C.lua_toboolean(L, i) != 0
+        elseif type_code == C.LUA_TNIL
+            args[i] = nothing
         else
             error("Unsupported Lua type: ", type_name)
         end
