@@ -5,7 +5,6 @@ export Lua_jll
 
 const UINT_MAX = typemax(Int64)
 
-
 const lua_Integer = Clonglong
 
 const lua_Number = Cdouble
@@ -109,7 +108,7 @@ function Base.getproperty(x::var"union (unnamed at C:\\Users\\rsampaio\\.julia\\
 end
 
 function Base.setproperty!(x::Ptr{var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)"}, f::Symbol, v)
-    unsafe_store!(getproperty(x, f), v)
+    return unsafe_store!(getproperty(x, f), v)
 end
 
 struct luaL_Buffer
@@ -133,7 +132,7 @@ function Base.getproperty(x::luaL_Buffer, f::Symbol)
 end
 
 function Base.setproperty!(x::Ptr{luaL_Buffer}, f::Symbol, v)
-    unsafe_store!(getproperty(x, f), v)
+    return unsafe_store!(getproperty(x, f), v)
 end
 
 function luaL_prepbuffsize(B, sz)
@@ -992,6 +991,5 @@ lua_tostring(L, i) = lua_tolstring(L, (i), C_NULL)
 #define lua_remove(L,idx)	(lua_rotate(L, (idx), -1), lua_pop(L, 1))
 
 #define lua_replace(L,idx)	(lua_copy(L, -1, (idx)), lua_pop(L, 1))
-
 
 end # module

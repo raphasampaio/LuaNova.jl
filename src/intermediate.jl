@@ -13,8 +13,9 @@ function close(L::LuaState)
 end
 
 function protected_call(L::LuaState, nargs::Integer)
-    if C.lua_pcallk(L, nargs, 1, 0, 0, C_NULL) != 0
-        error("Error calling: ", to_string(L, -1))
+    if C.lua_pcallk(L, nargs, Int32(C.LUA_MULTRET), 0, 0, C_NULL) != 0
+        error = to_string(L, -1)
+        throw(LuaError(error))
     end
     return nothing
 end

@@ -94,20 +94,17 @@ function test_table()
     return nothing
 end
 
-# function test_error_handling()
-#     L = LuaNova.new_state()
-#     LuaNova.open_libs(L)
+function test_error_handling()
+    L = LuaNova.new_state()
+    LuaNova.open_libs(L)
 
-#     LuaNova.push_string(L, "error('test error')")
-#     if LuaNova.protected_call(L, 0) != 0
-#         error_msg = LuaNova.to_string(L, -1)
-#         @test occursin("test error", error_msg)
-#     end
+    LuaNova.push_string(L, "error('test error')")
+    @test_throws LuaError LuaNova.protected_call(L, 0)
 
-#     LuaNova.close(L)
+    LuaNova.close(L)
 
-#     return nothing
-# end
+    return nothing
+end
 
 function test_all()
     @testset "Aqua" begin
@@ -126,9 +123,9 @@ function test_all()
         test_table()
     end
 
-    # @testset "Error Handling" begin
-    #     test_error_handling()
-    # end
+    @testset "Error Handling" begin
+        test_error_handling()
+    end
 
     return nothing
 end
