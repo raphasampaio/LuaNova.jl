@@ -14,8 +14,7 @@ end
 
 function protected_call(L::LuaState, nargs::Integer)
     if C.lua_pcallk(L, nargs, Int32(C.LUA_MULTRET), 0, 0, C_NULL) != 0
-        error = to_string(L, -1)
-        throw(LuaError(error))
+        throw(LuaError(L))
     end
     return nothing
 end
@@ -79,5 +78,10 @@ end
 
 function get_table(L::LuaState, idx::Integer)
     C.lua_gettable(L, idx)
+    return nothing
+end
+
+function arith(L::LuaState, op::String)
+    C.lua_arith(L, op)
     return nothing
 end

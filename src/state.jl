@@ -1,5 +1,14 @@
-function safe_script(L::LuaState, str::String)
-    return C.luaL_loadstring(L, str) == 1 || C.lua_pcallk(L, 0, Int32(C.LUA_MULTRET), 0, 0, C_NULL) == 1
+# load_script?
+function safe_script(L::LuaState, s::String)
+    if C.luaL_loadstring(L, s) != 0
+        throw(LuaError(L))
+    end
+
+    if C.lua_pcallk(L, 0, Int32(C.LUA_MULTRET), 0, 0, C_NULL) != 0
+        throw(LuaError(L))
+    end
+
+    return nothing
 end
 
 function from_lua(L::LuaState)
@@ -27,8 +36,7 @@ function from_lua(L::LuaState)
 end
 
 function to_lua(L::LuaState, x::Any)
-    error("Unsupported return type: ", typeof(x))
-    return nothing
+    throw(ArgumentError("Unsupported type: $(typeof(x))"))
 end
 
 function to_lua(L::LuaState, x::Real)
