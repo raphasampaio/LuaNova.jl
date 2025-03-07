@@ -85,3 +85,10 @@ function arith(L::LuaState, op::String)
     C.lua_arith(L, op)
     return nothing
 end
+
+function load_string(L::LuaState, s::String)
+    if C.luaL_loadstring(L, s) != 0
+        throw(LuaError(L))
+    end
+    return nothing
+end
