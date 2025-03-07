@@ -92,3 +92,19 @@ function load_string(L::LuaState, s::String)
     end
     return nothing
 end
+
+function new_userdata(L::LuaState, size::Integer)
+    return C.lua_newuserdatauv(L, size, 0)
+end
+
+function set_metatable(L::LuaState, idx::Integer)
+    return C.lua_setmetatable(L, idx)
+end
+
+function get_metatable(L::LuaState, idx::Integer)
+    return C.lua_getmetatable(L, idx)
+end
+
+function to_userdata(L::LuaState, idx::Integer)
+    return C.lua_touserdata(L, idx)
+end
