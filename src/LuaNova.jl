@@ -7,6 +7,7 @@ export
     to_cstring,
     @define_lua_function, 
     @push_lua_function,
+    @define_lua_struct,
     LuaError
 
 include("capi.jl")

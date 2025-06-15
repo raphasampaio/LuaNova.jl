@@ -42,3 +42,20 @@ macro push_lua_function(L, lua_function, julia_function)
         LuaNova.C.lua_setglobal($L, $lua_function)
     end)
 end
+
+macro define_lua_struct(struct_name)
+    struct_string = string(struct_name)
+
+    return esc(quote
+        function $struct_name(L::Ptr{LuaNova.C.lua_State})::Cint
+            args = LuaNova.from_lua(L)
+            object = $struct_name(args...)
+
+            userdata = LuaNova.C.lua_newuserdatauv(L, Csize_t(0), 0)
+            LuaNova.REGISTRY[Ptr{Cvoid}(userdata)] = Ref(object)
+            LuaNova.C.luaL_setmetatable(L, to_cstring($struct_string))
+
+            return 1
+        end
+    end)
+end
