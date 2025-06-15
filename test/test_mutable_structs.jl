@@ -21,20 +21,18 @@ const Point_registry = IdDict{Ptr{Cvoid}, Ref{Point}}()
 
 # ───– 3) Helpers ──────────────────────────────────────────────────────────────
 
-cstr(s::AbstractString) = Base.unsafe_convert(Ptr{Cchar}, pointer(s))
-
 # store a fresh Ref(p) in the registry under this userdata’s address
 function push_Point(L::Ptr{LuaNova.C.lua_State}, p::Point)
     # allocate zero-sized userdata; we only need its unique pointer
     ud = LuaNova.C.lua_newuserdatauv(L, Csize_t(0), 0)
     Point_registry[Ptr{Cvoid}(ud)] = Ref(p)
-    LuaNova.C.luaL_setmetatable(L, cstr("Point"))
+    LuaNova.C.luaL_setmetatable(L, to_cstring("Point"))
     return ud
 end
 
 # get the Ref{Point} back out
 get_ref(L::Ptr{LuaNova.C.lua_State}, idx::Cint) = begin
-    ud = LuaNova.C.luaL_checkudata(L, idx, cstr("Point"))
+    ud = LuaNova.C.luaL_checkudata(L, idx, to_cstring("Point"))
     Point_registry[Ptr{Cvoid}(ud)]
 end
 
@@ -52,7 +50,7 @@ end
 
 function Point_tostring(L::Ptr{LuaNova.C.lua_State})::Cint
     p = check_Point(L, Int32(1))
-    LuaNova.C.lua_pushstring(L, cstr("Point(" * string(p.x) * ", " * string(p.y) * ")"))
+    LuaNova.C.lua_pushstring(L, to_cstring("Point(" * string(p.x) * ", " * string(p.y) * ")"))
     return 1
 end
 
@@ -65,7 +63,7 @@ function Point_index(L::Ptr{LuaNova.C.lua_State})::Cint
         LuaNova.C.lua_pushnumber(L, ref[].y)
     else
         # fall back to methods in metatable
-        LuaNova.C.luaL_getmetatable(L, cstr("Point"))
+        LuaNova.C.luaL_getmetatable(L, to_cstring("Point"))
         LuaNova.C.lua_pushvalue(L, 2)
         LuaNova.C.lua_gettable(L, -2)
     end
@@ -81,7 +79,7 @@ function Point_newindex(L::Ptr{LuaNova.C.lua_State})::Cint
     elseif key == "y"
         ref[].y = val
     else
-        LuaNova.C.luaL_argerror(L, 2, cstr("invalid field"))
+        LuaNova.C.luaL_argerror(L, 2, to_cstring("invalid field"))
     end
     return 0
 end
@@ -100,7 +98,7 @@ end
 
 # __gc metamethod to remove from registry when Lua collects the userdata
 function Point_gc(L::Ptr{LuaNova.C.lua_State})::Cint
-    ud = LuaNova.C.luaL_checkudata(L, 1, cstr("Point"))
+    ud = LuaNova.C.luaL_checkudata(L, 1, to_cstring("Point"))
     delete!(Point_registry, Ptr{Cvoid}(ud))
     return 0
 end
@@ -122,21 +120,21 @@ LuaNova.open_libs(L)
 LuaNova.USERDATA_CONVERTERS["Point"] = check_Point
 
 # metatable
-LuaNova.C.luaL_newmetatable(L, cstr("Point"))
+LuaNova.C.luaL_newmetatable(L, to_cstring("Point"))
 
 # metamethods
 metam = [
-    LuaNova.C.luaL_Reg(cstr("__gc"),       c_Point_gc),
-    LuaNova.C.luaL_Reg(cstr("__tostring"), c_Point_tostring),
-    LuaNova.C.luaL_Reg(cstr("__index"),    c_Point_index),
-    LuaNova.C.luaL_Reg(cstr("__newindex"), c_Point_newindex),
+    LuaNova.C.luaL_Reg(to_cstring("__gc"),       c_Point_gc),
+    LuaNova.C.luaL_Reg(to_cstring("__tostring"), c_Point_tostring),
+    LuaNova.C.luaL_Reg(to_cstring("__index"),    c_Point_index),
+    LuaNova.C.luaL_Reg(to_cstring("__newindex"), c_Point_newindex),
     LuaNova.C.luaL_Reg(C_NULL,             C_NULL),
 ]
 LuaNova.C.luaL_setfuncs(L, pointer(metam), 0)
 
 # methods
 methods = [
-    LuaNova.C.luaL_Reg(cstr("sum"), c_Point_sum),
+    LuaNova.C.luaL_Reg(to_cstring("sum"), c_Point_sum),
     LuaNova.C.luaL_Reg(C_NULL,      C_NULL),
 ]
 LuaNova.C.luaL_setfuncs(L, pointer(methods), 0)
@@ -146,7 +144,7 @@ LuaNova.C.lua_pop(L, 1)
 
 # global constructor
 LuaNova.C.lua_pushcclosure(L, c_Point_new, 0)
-LuaNova.C.lua_setglobal(L, cstr("Point"))
+LuaNova.C.lua_setglobal(L, to_cstring("Point"))
 
 # ───– 7) Smoke-test ────────────────────────────────────────────────────────────
 
