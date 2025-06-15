@@ -55,8 +55,6 @@ function Point_index(L::Ptr{LuaNova.C.lua_State})::Cint
     elseif key == "y"
         LuaNova.C.lua_pushnumber(L, p.y)
     else
-        # LuaNova.C.lua_pushnil(L)
-
         LuaNova.C.luaL_getmetatable(L, cstr("Point"))  # push mt
         LuaNova.C.lua_pushvalue(L, 2)                  # push key
         LuaNova.C.lua_gettable(L, -2)                  # push mt[key] or nil
