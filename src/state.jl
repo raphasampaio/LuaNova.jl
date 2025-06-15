@@ -47,7 +47,7 @@ function from_lua(L::LuaState)
     return args
 end
 
-function to_lua(L::LuaState, x::Any)
+function to_lua(::LuaState, x::Any)
     throw(ArgumentError("Unsupported type: $(typeof(x))"))
 end
 
@@ -63,5 +63,10 @@ end
 
 function to_lua(L::LuaState, x::Bool)
     push_boolean(L, x)
+    return 1
+end
+
+function to_lua(L::LuaState, ::Nothing)
+    C.lua_pushnil(L)
     return 1
 end
