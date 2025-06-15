@@ -68,7 +68,6 @@ macro push_lua_struct(L, struct_name, args...)
 
     method_entries = Expr[]
     push!(method_entries, :(LuaNova.C.luaL_Reg(to_cstring("__gc"), @cfunction(Point_gc, Cint, (Ptr{LuaNova.C.lua_State},)))))
-    push!(method_entries, :(LuaNova.C.luaL_Reg(to_cstring("__tostring"), @cfunction(Point_tostring, Cint, (Ptr{LuaNova.C.lua_State},)))))
     push!(method_entries, :(LuaNova.C.luaL_Reg(to_cstring("__index"), @cfunction(Point_index, Cint, (Ptr{LuaNova.C.lua_State},)))))
     push!(method_entries, :(LuaNova.C.luaL_Reg(to_cstring("__newindex"), @cfunction(Point_newindex, Cint, (Ptr{LuaNova.C.lua_State},)))))
 
