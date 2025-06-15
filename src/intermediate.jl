@@ -108,3 +108,7 @@ end
 function to_userdata(L::LuaState, idx::Integer)
     return C.lua_touserdata(L, idx)
 end
+
+function check_userdata(L::LuaState, ud::Integer, tname::Ptr{Cchar})
+    return LuaNova.C.luaL_checkudata(L, ud, tname)
+end

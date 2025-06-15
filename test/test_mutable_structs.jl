@@ -17,7 +17,7 @@ end
 
 # ───– 2) Registry to hold our Refs so they aren’t GC’d ─────────────────────────
 
-const Point_registry = IdDict{Ptr{Cvoid}, Ref{Point}}()
+const Point_registry = IdDict{Ptr{Cvoid}, Ref}()
 
 # ───– 3) Helpers ──────────────────────────────────────────────────────────────
 
@@ -31,9 +31,9 @@ function push_Point(L::Ptr{LuaNova.C.lua_State}, p::Point)
 end
 
 # get the Ref{Point} back out
-get_ref(L::Ptr{LuaNova.C.lua_State}, idx::Cint) = begin
+function get_ref(L::Ptr{LuaNova.C.lua_State}, idx::Cint)
     ud = LuaNova.C.luaL_checkudata(L, idx, to_cstring("Point"))
-    Point_registry[Ptr{Cvoid}(ud)]
+    return Point_registry[Ptr{Cvoid}(ud)]
 end
 
 # for methods that only need a copy
@@ -44,7 +44,7 @@ check_Point(L::Ptr{LuaNova.C.lua_State}, idx::Cint)::Point = get_ref(L, idx)[]
 function Point_new(L::Ptr{LuaNova.C.lua_State})::Cint
     x = LuaNova.C.luaL_checknumber(L, 1)
     y = LuaNova.C.luaL_checknumber(L, 2)
-    push_Point(L, Point(x,y))
+    push_Point(L, Point(x, y))
     return 1
 end
 
@@ -89,8 +89,8 @@ function Point_sum(L::Ptr{LuaNova.C.lua_State})::Cint
 
     @show args = LuaNova.from_lua(L)
 
-    dx  = LuaNova.C.luaL_checknumber(L, 2)
-    dy  = LuaNova.C.luaL_checknumber(L, 3)
+    dx = LuaNova.C.luaL_checknumber(L, 2)
+    dy = LuaNova.C.luaL_checknumber(L, 3)
     # call the Julia function
     mysum(ref[], dx, dy)
     return 0
@@ -105,12 +105,12 @@ end
 
 # ───– 5) Turn them into C-functions ─────────────────────────────────────────────
 
-const c_Point_new      = @cfunction(Point_new,      Cint, (Ptr{LuaNova.C.lua_State},))
+const c_Point_new = @cfunction(Point_new, Cint, (Ptr{LuaNova.C.lua_State},))
 const c_Point_tostring = @cfunction(Point_tostring, Cint, (Ptr{LuaNova.C.lua_State},))
-const c_Point_index    = @cfunction(Point_index,    Cint, (Ptr{LuaNova.C.lua_State},))
+const c_Point_index = @cfunction(Point_index, Cint, (Ptr{LuaNova.C.lua_State},))
 const c_Point_newindex = @cfunction(Point_newindex, Cint, (Ptr{LuaNova.C.lua_State},))
-const c_Point_sum      = @cfunction(Point_sum,      Cint, (Ptr{LuaNova.C.lua_State},))
-const c_Point_gc       = @cfunction(Point_gc,       Cint, (Ptr{LuaNova.C.lua_State},))
+const c_Point_sum = @cfunction(Point_sum, Cint, (Ptr{LuaNova.C.lua_State},))
+const c_Point_gc = @cfunction(Point_gc, Cint, (Ptr{LuaNova.C.lua_State},))
 
 # ───– 6) Register in Lua ───────────────────────────────────────────────────────
 
@@ -124,18 +124,18 @@ LuaNova.C.luaL_newmetatable(L, to_cstring("Point"))
 
 # metamethods
 metam = [
-    LuaNova.C.luaL_Reg(to_cstring("__gc"),       c_Point_gc),
+    LuaNova.C.luaL_Reg(to_cstring("__gc"), c_Point_gc),
     LuaNova.C.luaL_Reg(to_cstring("__tostring"), c_Point_tostring),
-    LuaNova.C.luaL_Reg(to_cstring("__index"),    c_Point_index),
+    LuaNova.C.luaL_Reg(to_cstring("__index"), c_Point_index),
     LuaNova.C.luaL_Reg(to_cstring("__newindex"), c_Point_newindex),
-    LuaNova.C.luaL_Reg(C_NULL,             C_NULL),
+    LuaNova.C.luaL_Reg(C_NULL, C_NULL),
 ]
 LuaNova.C.luaL_setfuncs(L, pointer(metam), 0)
 
 # methods
 methods = [
     LuaNova.C.luaL_Reg(to_cstring("sum"), c_Point_sum),
-    LuaNova.C.luaL_Reg(C_NULL,      C_NULL),
+    LuaNova.C.luaL_Reg(C_NULL, C_NULL),
 ]
 LuaNova.C.luaL_setfuncs(L, pointer(methods), 0)
 
@@ -148,14 +148,17 @@ LuaNova.C.lua_setglobal(L, to_cstring("Point"))
 
 # ───– 7) Smoke-test ────────────────────────────────────────────────────────────
 
-LuaNova.safe_script(L, """
+LuaNova.safe_script(
+    L,
+    """
 local p = Point(1.2, 3.4)
 print(p)        -- Point(1.2, 3.4)
 p.x = 9.8
 print(p)        -- Point(9.8, 3.4)
 p:sum(10, 20)
 print(p)        -- Point(19.8, 23.4)
-""")
+""",
+)
 
 LuaNova.close(L)
 
