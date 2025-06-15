@@ -76,29 +76,37 @@ function Point_newindex(L::Ptr{LuaNova.C.lua_State})::Cint
     elseif key == "y"
         unsafe_store!(pptr, Point(unsafe_load(pptr).x, val))
     else
-        # arg error: invalid field
         LuaNova.C.luaL_argerror(L, 2, cstr("invalid field"))
-
-        # LuaNova.C.luaL_getmetatable(L, cstr("Point"))  # push metatable
-        # LuaNova.C.lua_pushvalue(L, 2)                  # push the key
-        # LuaNova.C.lua_gettable(L, -2)                  # pushes metatable[key] or nil
-
-        # LuaNova.C.luaL_getmetatable(L, cstr("Point"))  # push mt
-        # LuaNova.C.lua_pushvalue(L, 2)                  # push key
-        # LuaNova.C.lua_gettable(L, -2)                  # push mt[key] or nil
     end
     return 0
 end
 
+# function Point_sum(L::Ptr{LuaNova.C.lua_State})::Cint
+#     # 1st arg is the userdata; we just type-check it
+#     _ = check_Point(L, Int32(1))
+#     # next two args are numbers
+#     @show a = LuaNova.C.luaL_checknumber(L, 2)
+#     @show b = LuaNova.C.luaL_checknumber(L, 3)
+#     # push their sum
+#     LuaNova.C.lua_pushnumber(L, a + b)
+#     return 1
+# end
+
 function Point_sum(L::Ptr{LuaNova.C.lua_State})::Cint
-    # 1st arg is the userdata; we just type-check it
-    _ = check_Point(L, Int32(1))
-    # next two args are numbers
-    @show a = LuaNova.C.luaL_checknumber(L, 2)
-    @show b = LuaNova.C.luaL_checknumber(L, 3)
-    # push their sum
-    LuaNova.C.lua_pushnumber(L, a + b)
-    return 1
+    # 1) get the raw userdata pointer for mutation
+    ud   = LuaNova.C.luaL_checkudata(L, 1, cstr("Point"))
+    pptr = Ptr{Point}(ud)
+
+    # 2) read the deltas
+    dx = LuaNova.C.luaL_checknumber(L, 2)
+    dy = LuaNova.C.luaL_checknumber(L, 3)
+
+    # 3) load, modify, and write back
+    old = unsafe_load(pptr)
+    unsafe_store!(pptr, Point(old.x + dx, old.y + dy))
+
+    # 4) no values returned
+    return 0
 end
 
 # turn our Julia functions into C‐callable pointers
@@ -142,7 +150,8 @@ local p = Point(1.2, 3.4)
 print(p)
 p.x = 9.8
 print(p)
-print(p:sum(10, 20))
+p:sum(10, 20)
+print(p)
 """)
 
 LuaNova.close(L)
