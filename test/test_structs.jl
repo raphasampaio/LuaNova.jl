@@ -55,7 +55,11 @@ function Point_index(L::Ptr{LuaNova.C.lua_State})::Cint
     elseif key == "y"
         LuaNova.C.lua_pushnumber(L, p.y)
     else
-        LuaNova.C.lua_pushnil(L)
+        # LuaNova.C.lua_pushnil(L)
+
+        LuaNova.C.luaL_getmetatable(L, cstr("Point"))  # push mt
+        LuaNova.C.lua_pushvalue(L, 2)                  # push key
+        LuaNova.C.lua_gettable(L, -2)                  # push mt[key] or nil
     end
     return 1
 end
@@ -74,8 +78,27 @@ function Point_newindex(L::Ptr{LuaNova.C.lua_State})::Cint
     else
         # arg error: invalid field
         LuaNova.C.luaL_argerror(L, 2, cstr("invalid field"))
+
+        # LuaNova.C.luaL_getmetatable(L, cstr("Point"))  # push metatable
+        # LuaNova.C.lua_pushvalue(L, 2)                  # push the key
+        # LuaNova.C.lua_gettable(L, -2)                  # pushes metatable[key] or nil
+
+        # LuaNova.C.luaL_getmetatable(L, cstr("Point"))  # push mt
+        # LuaNova.C.lua_pushvalue(L, 2)                  # push key
+        # LuaNova.C.lua_gettable(L, -2)                  # push mt[key] or nil
     end
     return 0
+end
+
+function Point_sum(L::Ptr{LuaNova.C.lua_State})::Cint
+    # 1st arg is the userdata; we just type-check it
+    _ = check_Point(L, Int32(1))
+    # next two args are numbers
+    @show a = LuaNova.C.luaL_checknumber(L, 2)
+    @show b = LuaNova.C.luaL_checknumber(L, 3)
+    # push their sum
+    LuaNova.C.lua_pushnumber(L, a + b)
+    return 1
 end
 
 # turn our Julia functions into C‐callable pointers
@@ -83,6 +106,7 @@ const c_Point_new = @cfunction(Point_new, Cint, (Ptr{LuaNova.C.lua_State},))
 const c_Point_tostring = @cfunction(Point_tostring, Cint, (Ptr{LuaNova.C.lua_State},))
 const c_Point_index = @cfunction(Point_index, Cint, (Ptr{LuaNova.C.lua_State},))
 const c_Point_newindex = @cfunction(Point_newindex, Cint, (Ptr{LuaNova.C.lua_State},))
+const c_Point_sum = @cfunction(Point_sum, Cint, (Ptr{LuaNova.C.lua_State},))
 
 L = LuaNova.new_state()
 LuaNova.open_libs(L)
@@ -99,6 +123,12 @@ regs = [
 ]
 LuaNova.C.luaL_setfuncs(L, pointer(regs), 0)
 
+methods = [
+    LuaNova.C.luaL_Reg(cstr("sum"), c_Point_sum),
+    LuaNova.C.luaL_Reg(C_NULL, C_NULL),
+]
+LuaNova.C.luaL_setfuncs(L, pointer(methods), 0)
+
 # pop the metatable off the stack
 LuaNova.C.lua_pop(L, 1)
 
@@ -112,6 +142,7 @@ local p = Point(1.2, 3.4)
 print(p)
 p.x = 9.8
 print(p)
+print(p:sum(10, 20))
 """)
 
 LuaNova.close(L)
