@@ -9,7 +9,6 @@ export
     @push_lua_function,
     @define_lua_struct,
     @push_lua_struct,
-    _push_lua_field,
     LuaError
 
 include("capi.jl")

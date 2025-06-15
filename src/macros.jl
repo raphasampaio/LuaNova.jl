@@ -60,25 +60,18 @@ macro define_lua_struct(struct_name)
     end)
 end
 
-function _push_lua_field(L, ::Type{T}, key::String, f) where {T}
-    return println("Registering method")
-end
-
 macro push_lua_struct(L, struct_name, args...)
     n = length(args)
     isodd(n) && error("@push_lua_struct needs key fn pairs (got $n args)")
 
     struct_string = string(struct_name)
 
-    metam_entries = Expr[]
-    push!(metam_entries, :(LuaNova.C.luaL_Reg(to_cstring("__gc"), @cfunction(Point_gc, Cint, (Ptr{LuaNova.C.lua_State},)))))
-    push!(metam_entries, :(LuaNova.C.luaL_Reg(to_cstring("__tostring"), @cfunction(Point_tostring, Cint, (Ptr{LuaNova.C.lua_State},)))))
-    push!(metam_entries, :(LuaNova.C.luaL_Reg(to_cstring("__index"), @cfunction(Point_index, Cint, (Ptr{LuaNova.C.lua_State},)))))
-    push!(metam_entries, :(LuaNova.C.luaL_Reg(to_cstring("__newindex"), @cfunction(Point_newindex, Cint, (Ptr{LuaNova.C.lua_State},)))))
-    push!(metam_entries, :(LuaNova.C.luaL_Reg(C_NULL, C_NULL)))
-    metam_vect = Expr(:vect, metam_entries...)
-
     method_entries = Expr[]
+    push!(method_entries, :(LuaNova.C.luaL_Reg(to_cstring("__gc"), @cfunction(Point_gc, Cint, (Ptr{LuaNova.C.lua_State},)))))
+    push!(method_entries, :(LuaNova.C.luaL_Reg(to_cstring("__tostring"), @cfunction(Point_tostring, Cint, (Ptr{LuaNova.C.lua_State},)))))
+    push!(method_entries, :(LuaNova.C.luaL_Reg(to_cstring("__index"), @cfunction(Point_index, Cint, (Ptr{LuaNova.C.lua_State},)))))
+    push!(method_entries, :(LuaNova.C.luaL_Reg(to_cstring("__newindex"), @cfunction(Point_newindex, Cint, (Ptr{LuaNova.C.lua_State},)))))
+
     for i in 1:2:n
         key = args[i]
         fn = args[i+1]
@@ -87,11 +80,8 @@ macro push_lua_struct(L, struct_name, args...)
     push!(method_entries, :(LuaNova.C.luaL_Reg(C_NULL, C_NULL)))
     methods_vect = Expr(:vect, method_entries...)
 
-    blk = quote
+    return esc(quote
         LuaNova.C.luaL_newmetatable($L, to_cstring($(struct_string)))
-
-        local metam = $metam_vect
-        LuaNova.C.luaL_setfuncs($L, pointer(metam), 0)
 
         local methods = $methods_vect
         LuaNova.C.luaL_setfuncs($L, pointer(methods), 0)
@@ -100,7 +90,5 @@ macro push_lua_struct(L, struct_name, args...)
 
         LuaNova.C.lua_pushcclosure($L, @cfunction(Point, Cint, (Ptr{LuaNova.C.lua_State},)), 0)
         LuaNova.C.lua_setglobal($L, to_cstring("Point"))
-    end
-
-    return esc(blk)
+    end)
 end
