@@ -3,155 +3,155 @@ module TestMutableStructs
 using LuaNova
 using Test
 
+# turn a Julia string into a C‐string pointer
+cstr(s::AbstractString) = Base.unsafe_convert(Ptr{Cchar}, pointer(s))
+
+# ─── 1) Immutable, isbits Point ────────────────────────────────────────────────
+
+# Why immutable? Julia only lets you unsafe_store!/unsafe_load “inline” for isbits types (immutable structs whose fields are all bits). Once you switch to a mutable struct, Julia boxes the object and the inline store/load stops working as you observed. If you truly need a mutable struct you’d have to instead store a Ref{Point} inside the userdata (and manage GC rooting), pull out the Ref via unsafe_load, then do r[].x = … / r[].x += … inside your metamethods. That’s doable, but far more plumbing.
+
 struct Point
     x::Float64
     y::Float64
 end
 
-# convenience to turn a Julia string into a C‐string pointer
-cstr(s::AbstractString) = Base.unsafe_convert(Ptr{Cchar}, pointer(s))
+# ─── 2a) push helper: allocate userdata and copy the struct in ───────────────
 
-# (2a) push helper: allocates userdata + sets its metatable
 function push_Point(L::Ptr{LuaNova.C.lua_State}, p::Point)
-    # allocate userdata of exactly sizeof(Point) bytes
+    # exactly sizeof(Point)==16 bytes for two Float64
     ud = LuaNova.C.lua_newuserdatauv(L, Csize_t(sizeof(Point)), 0)
-    # copy the Julia struct into that memory
-    unsafe_store!(Ptr{Point}(ud), p)
-    # set its metatable so Lua knows its type
+    unsafe_store!(Ptr{Point}(ud), p)           # copy p into that memory
     LuaNova.C.luaL_setmetatable(L, cstr("Point"))
     return ud
 end
 
-# (2b) check helper: verifies userdata + retrieves your struct
+# ─── 2b) check helper: verify type + load it back out ─────────────────────────
+
 function check_Point(L::Ptr{LuaNova.C.lua_State}, idx::Cint)::Point
     ud = LuaNova.C.luaL_checkudata(L, idx, cstr("Point"))
     return unsafe_load(Ptr{Point}(ud))
 end
 
-# (3a) constructor: Point(x,y)
+# ─── 3a) constructor: Point(x,y) ───────────────────────────────────────────────
+
 function Point_new(L::Ptr{LuaNova.C.lua_State})::Cint
-    # get args from Lua stack
     x = LuaNova.C.luaL_checknumber(L, 1)
     y = LuaNova.C.luaL_checknumber(L, 2)
-    # construct Julia object and push
     push_Point(L, Point(x, y))
     return 1
 end
 
-# (3b) __tostring metamethod
+# ─── 3b) __tostring metamethod ────────────────────────────────────────────────
+
 function Point_tostring(L::Ptr{LuaNova.C.lua_State})::Cint
     p = check_Point(L, Int32(1))
-    LuaNova.C.lua_pushstring(L, cstr("Pointaaaa(" * string(p.x) * ", " * string(p.y) * ")"))
+    LuaNova.C.lua_pushstring(L, cstr("Point(" * string(p.x) * ", " * string(p.y) * ")"))
     return 1
 end
 
-# (3c) __index metamethod for field access
+# ─── 3c) __index metamethod for reading .x and .y (and falling back to methods) ─
+
 function Point_index(L::Ptr{LuaNova.C.lua_State})::Cint
-    p = check_Point(L, Int32(1))
-    # get the key as a Julia string
+    p   = check_Point(L, Int32(1))
     key = unsafe_string(LuaNova.C.luaL_checklstring(L, 2, C_NULL))
     if key == "x"
         LuaNova.C.lua_pushnumber(L, p.x)
     elseif key == "y"
         LuaNova.C.lua_pushnumber(L, p.y)
     else
-        LuaNova.C.luaL_getmetatable(L, cstr("Point"))  # push mt
-        LuaNova.C.lua_pushvalue(L, 2)                  # push key
-        LuaNova.C.lua_gettable(L, -2)                  # push mt[key] or nil
+        # fall back to any methods in the metatable
+        LuaNova.C.luaL_getmetatable(L, cstr("Point"))
+        LuaNova.C.lua_pushvalue(L, 2)
+        LuaNova.C.lua_gettable(L, -2)
     end
     return 1
 end
 
-# (3d) __newindex metamethod for field assignment
+# ─── 3d) __newindex metamethod for writing .x and .y ──────────────────────────
+
 function Point_newindex(L::Ptr{LuaNova.C.lua_State})::Cint
-    # we need a mutable backing—we require a Ptr{Point} so we can write into it
-    ud = LuaNova.C.luaL_checkudata(L, 1, cstr("Point"))
+    ud   = LuaNova.C.luaL_checkudata(L, 1, cstr("Point"))
     pptr = Ptr{Point}(ud)
-    key = unsafe_string(LuaNova.C.luaL_checklstring(L, 2, C_NULL))
-    val = LuaNova.C.luaL_checknumber(L, 3)
+    key  = unsafe_string(LuaNova.C.luaL_checklstring(L, 2, C_NULL))
+    val  = LuaNova.C.luaL_checknumber(L, 3)
+
+    old = unsafe_load(pptr)
     if key == "x"
-        unsafe_store!(pptr, Point(val, unsafe_load(pptr).y))
+        unsafe_store!(pptr, Point(val, old.y))
     elseif key == "y"
-        unsafe_store!(pptr, Point(unsafe_load(pptr).x, val))
+        unsafe_store!(pptr, Point(old.x, val))
     else
         LuaNova.C.luaL_argerror(L, 2, cstr("invalid field"))
     end
+
     return 0
 end
 
-# function Point_sum(L::Ptr{LuaNova.C.lua_State})::Cint
-#     # 1st arg is the userdata; we just type-check it
-#     _ = check_Point(L, Int32(1))
-#     # next two args are numbers
-#     @show a = LuaNova.C.luaL_checknumber(L, 2)
-#     @show b = LuaNova.C.luaL_checknumber(L, 3)
-#     # push their sum
-#     LuaNova.C.lua_pushnumber(L, a + b)
-#     return 1
-# end
+# ─── 3e) sum method: add (dx,dy) and write back ────────────────────────────────
 
 function Point_sum(L::Ptr{LuaNova.C.lua_State})::Cint
-    # 1) get the raw userdata pointer for mutation
     ud   = LuaNova.C.luaL_checkudata(L, 1, cstr("Point"))
     pptr = Ptr{Point}(ud)
 
-    # 2) read the deltas
     dx = LuaNova.C.luaL_checknumber(L, 2)
     dy = LuaNova.C.luaL_checknumber(L, 3)
 
-    # 3) load, modify, and write back
     old = unsafe_load(pptr)
     unsafe_store!(pptr, Point(old.x + dx, old.y + dy))
 
-    # 4) no values returned
     return 0
 end
 
-# turn our Julia functions into C‐callable pointers
-const c_Point_new = @cfunction(Point_new, Cint, (Ptr{LuaNova.C.lua_State},))
+# ─── 4) make C‐callable function pointers ───────────────────────────────────────
+
+const c_Point_new      = @cfunction(Point_new,      Cint, (Ptr{LuaNova.C.lua_State},))
 const c_Point_tostring = @cfunction(Point_tostring, Cint, (Ptr{LuaNova.C.lua_State},))
-const c_Point_index = @cfunction(Point_index, Cint, (Ptr{LuaNova.C.lua_State},))
+const c_Point_index    = @cfunction(Point_index,    Cint, (Ptr{LuaNova.C.lua_State},))
 const c_Point_newindex = @cfunction(Point_newindex, Cint, (Ptr{LuaNova.C.lua_State},))
-const c_Point_sum = @cfunction(Point_sum, Cint, (Ptr{LuaNova.C.lua_State},))
+const c_Point_sum      = @cfunction(Point_sum,      Cint, (Ptr{LuaNova.C.lua_State},))
+
+# ─── 5) hook it all up in Lua ─────────────────────────────────────────────────
 
 L = LuaNova.new_state()
 LuaNova.open_libs(L)
 
+# create the Point metatable
 LuaNova.C.luaL_newmetatable(L, cstr("Point"))
 
-# register the metamethods
+# metamethods
 regs = [
     LuaNova.C.luaL_Reg(cstr("__tostring"), c_Point_tostring),
-    LuaNova.C.luaL_Reg(cstr("__index"), c_Point_index),
-    LuaNova.C.luaL_Reg(cstr("__newindex"), c_Point_newindex),
-    # end with a sentinel
-    LuaNova.C.luaL_Reg(C_NULL, C_NULL),
+    LuaNova.C.luaL_Reg(cstr("__index"),     c_Point_index),
+    LuaNova.C.luaL_Reg(cstr("__newindex"),  c_Point_newindex),
+    LuaNova.C.luaL_Reg(C_NULL,              C_NULL),
 ]
 LuaNova.C.luaL_setfuncs(L, pointer(regs), 0)
 
+# normal methods (available as p:sum)
 methods = [
     LuaNova.C.luaL_Reg(cstr("sum"), c_Point_sum),
-    LuaNova.C.luaL_Reg(C_NULL, C_NULL),
+    LuaNova.C.luaL_Reg(C_NULL,      C_NULL),
 ]
 LuaNova.C.luaL_setfuncs(L, pointer(methods), 0)
 
-# pop the metatable off the stack
+# pop the metatable
 LuaNova.C.lua_pop(L, 1)
 
-# register the global constructor Point()
+# register the constructor Point()
 LuaNova.C.lua_pushcclosure(L, c_Point_new, 0)
 LuaNova.C.lua_setglobal(L, cstr("Point"))
 
-LuaNova.safe_script(
-    L, """
+# ─── 6) smoke–test it ─────────────────────────────────────────────────────────
+
+LuaNova.safe_script(L, """
 local p = Point(1.2, 3.4)
-print(p)
+print(p)         -- Point(1.2, 3.4)
 p.x = 9.8
-print(p)
+print(p)         -- Point(9.8, 3.4)
 p:sum(10, 20)
-print(p)
+print(p)         -- Point(19.8, 23.4)
 """)
 
 LuaNova.close(L)
 
-end
+end # module
