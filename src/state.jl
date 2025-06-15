@@ -27,6 +27,18 @@ function from_lua(L::LuaState)
             args[i] = C.lua_toboolean(L, i) != 0
         elseif type_code == C.LUA_TNIL
             args[i] = nothing
+        elseif type_code == C.LUA_TUSERDATA
+            C.lua_getmetatable(L, i)
+            C.lua_pushstring(L, Base.unsafe_convert(Ptr{Cchar}, pointer("__name")))
+            C.lua_rawget(L, -2)
+            @show name = unsafe_string(C.lua_tostring(L, -1))
+            C.lua_pop(L, 2)
+
+            converter = get(USERDATA_CONVERTERS, name, nothing)
+            if converter === nothing
+                error("Unsupported userdata type: ", name)
+            end
+            args[i] = converter(L, Int32(i))
         else
             error("Unsupported Lua type: ", type_name)
         end

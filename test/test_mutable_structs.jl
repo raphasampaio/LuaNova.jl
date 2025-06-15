@@ -9,6 +9,12 @@ mutable struct Point
     y::Float64
 end
 
+function mysum(p::Point, dx::Float64, dy::Float64)
+    p.x += dx
+    p.y += dy
+    return nothing
+end
+
 # ───– 2) Registry to hold our Refs so they aren’t GC’d ─────────────────────────
 
 const Point_registry = IdDict{Ptr{Cvoid}, Ref{Point}}()
@@ -82,10 +88,13 @@ end
 
 function Point_sum(L::Ptr{LuaNova.C.lua_State})::Cint
     ref = get_ref(L, Int32(1))
+
+    @show args = LuaNova.from_lua(L)
+
     dx  = LuaNova.C.luaL_checknumber(L, 2)
     dy  = LuaNova.C.luaL_checknumber(L, 3)
-    ref[].x += dx
-    ref[].y += dy
+    # call the Julia function
+    mysum(ref[], dx, dy)
     return 0
 end
 
@@ -109,6 +118,8 @@ const c_Point_gc       = @cfunction(Point_gc,       Cint, (Ptr{LuaNova.C.lua_Sta
 
 L = LuaNova.new_state()
 LuaNova.open_libs(L)
+
+LuaNova.USERDATA_CONVERTERS["Point"] = check_Point
 
 # metatable
 LuaNova.C.luaL_newmetatable(L, cstr("Point"))

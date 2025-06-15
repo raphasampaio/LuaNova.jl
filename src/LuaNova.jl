@@ -13,6 +13,8 @@ import .C
 
 const LuaState = Union{Ptr{C.lua_State}, Ptr{Nothing}}
 
+const USERDATA_CONVERTERS = Dict()
+
 include("error.jl")
 include("intermediate.jl")
 include("state.jl")
