@@ -131,6 +131,10 @@ function to_userdata(L::LuaState, idx::Integer)
     return C.lua_touserdata(L, idx)
 end
 
+function to_userdata(L::LuaState, idx::Integer, ::Type{T}) where T
+    return get_reference(L, idx, to_string(T))
+end
+
 function lua_check_userdata(L::LuaState, idx::Integer, name::String)
     return C.luaL_checkudata(L, Int32(idx), to_cstring(name))
 end
