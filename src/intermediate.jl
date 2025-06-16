@@ -106,8 +106,18 @@ function new_userdata(L::LuaState, size::Integer)
     return C.lua_newuserdatauv(L, size, 0)
 end
 
+function new_metatable(L::LuaState, name::String)
+    return C.luaL_newmetatable(L, to_cstring(name))
+end
+
 function set_metatable(L::LuaState, idx::Integer)
-    return C.lua_setmetatable(L, idx)
+    C.lua_setmetatable(L, idx)
+    return nothing
+end
+
+function set_metatable(L::LuaState, name::String)
+    C.luaL_setmetatable(L, to_cstring(name))
+    return nothing
 end
 
 function get_metatable(L::LuaState, idx::Integer)

@@ -57,7 +57,7 @@ macro define_lua_struct(struct_name)
 
             userdata = LuaNova.C.lua_newuserdatauv(L, Csize_t(0), 0)
             LuaNova.REGISTRY[Ptr{Cvoid}(userdata)] = Ref(object)
-            LuaNova.C.luaL_setmetatable(L, to_cstring($struct_string))
+            LuaNova.set_metatable(L, $struct_string)
 
             return 1
         end
@@ -121,7 +121,7 @@ macro push_lua_struct(L, struct_name, args...)
     methods_vect = Expr(:vect, method_entries...)
 
     return esc(quote
-        LuaNova.C.luaL_newmetatable($L, to_cstring($(struct_string)))
+        LuaNova.new_metatable($L, $(struct_string))
         local methods = $methods_vect
         LuaNova.C.luaL_setfuncs($L, pointer(methods), 0)
         LuaNova.C.lua_pop($L, 1)
