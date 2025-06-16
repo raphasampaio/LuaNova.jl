@@ -56,7 +56,7 @@ function push_to_lua!(L::LuaState, ::Nothing)
     return nothing
 end
 
-function push_to_lua!(L::LuaState, x::T) where T
+function push_to_lua!(L::LuaState, x::T) where {T}
     struct_string = to_string(T)
     userdata = new_userdata(L, 0)
     REGISTRY[userdata] = Ref(x)
@@ -131,7 +131,7 @@ function to_userdata(L::LuaState, idx::Integer)
     return C.lua_touserdata(L, idx)
 end
 
-function to_userdata(L::LuaState, idx::Integer, ::Type{T}) where T
+function to_userdata(L::LuaState, idx::Integer, ::Type{T}) where {T}
     return get_reference(L, idx, to_string(T))
 end
 
