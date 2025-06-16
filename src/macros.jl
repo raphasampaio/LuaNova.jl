@@ -103,9 +103,9 @@ macro push_lua_struct(L, struct_name, args...)
     isodd(n) && error("@push_lua_struct needs key fn pairs (got $n args)")
 
     struct_string = string(struct_name)
-    gc_fn = Symbol(string(struct_name) * "_gc")
-    idx_fn = Symbol(string(struct_name) * "_index")
-    new_fn = Symbol(string(struct_name) * "_newindex")
+    gc_fn = Symbol(struct_string * "_gc")
+    idx_fn = Symbol(struct_string * "_index")
+    new_fn = Symbol(struct_string * "_newindex")
 
     method_entries = Expr[]
     push!(method_entries, :(LuaNova.create_register("__gc", @cfunction($(gc_fn), Cint, (Ptr{LuaNova.C.lua_State},)))))
@@ -123,11 +123,11 @@ macro push_lua_struct(L, struct_name, args...)
     return esc(quote
         LuaNova.new_metatable($L, $(struct_string))
         local methods = $methods_vect
-        LuaNova.C.luaL_setfuncs($L, pointer(methods), 0)
-        LuaNova.C.lua_pop($L, 1)
+        LuaNova.set_functions($L, methods)
+        LuaNova.lua_pop!($L, 1)
 
         # constructor
-        LuaNova.C.lua_pushcclosure($L, @cfunction($struct_name, Cint, (Ptr{LuaNova.C.lua_State},)), 0)
+        LuaNova.push_cfunction($L, @cfunction($struct_name, Cint, (Ptr{LuaNova.C.lua_State},)))
         LuaNova.set_global($L, $struct_string)
     end)
 end

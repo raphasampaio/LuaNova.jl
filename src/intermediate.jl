@@ -70,11 +70,6 @@ function set_global(L::LuaState, name::String)
     return nothing
 end
 
-function push_cfunction(L::LuaState, f::Ptr{Nothing})
-    C.lua_pushcfunction(L, f)
-    return nothing
-end
-
 function new_table(L::LuaState)
     C.lua_createtable(L, 0, 0)
     return nothing
@@ -136,10 +131,25 @@ function lua_check_userdata(L::LuaState, idx::Integer, name::String)
     return C.luaL_checkudata(L, Int32(idx), to_cstring(name))
 end
 
-function create_register(name::String, f::C.lua_CFunction)
+function create_register(name::String, f::Ptr{Cvoid})
     return C.luaL_Reg(to_cstring(name), f)
 end
 
 function create_null_register()
     return C.luaL_Reg(C_NULL, C_NULL)
+end
+
+function set_functions(L::LuaState, methods::Vector{C.luaL_Reg})
+    C.luaL_setfuncs(L, pointer(methods), 0)
+    return nothing
+end
+
+function lua_pop!(L::LuaState, n::Integer)
+    C.lua_pop(L, n)
+    return nothing
+end
+
+function push_cfunction(L::LuaState, cfunction::Union{Ptr{Cvoid}, Ptr{Nothing}})
+    C.lua_pushcfunction(L, cfunction)
+    return nothing
 end
