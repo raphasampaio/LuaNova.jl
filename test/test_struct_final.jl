@@ -1,4 +1,4 @@
-module TestMacros
+module TestMutableStruct
 
 using LuaNova
 using Test
@@ -7,35 +7,51 @@ mutable struct Point
     x::Float64
     y::Float64
 end
-
 @define_lua_struct Point
 
-@testset "Macros" begin
+function add(p::Point, x::Float64, y::Float64)
+    p.x += x
+    p.y += y
+    return nothing
+end
+@define_lua_function add
+
+function subtract(p::Point, x::Float64, y::Float64)
+    p.x -= x
+    p.y -= y
+    return nothing
+end
+@define_lua_function subtract
+
+function to_string(p::Point)
+    return "Point($(p.x), $(p.y))"
+end
+@define_lua_function to_string
+
+@testset "Mutable Struct" begin
     L = LuaNova.new_state()
     LuaNova.open_libs(L)
 
-    @push_lua_function(L, "sum", mysum)
+    @push_lua_struct(
+        L,
+        Point,
+        "add", add,
+        "subtract", subtract,
+        "__tostring", to_string,
+    )
 
-    LuaNova.get_global(L, "sum")
-    LuaNova.push_number(L, 1)
-    LuaNova.push_number(L, 2)
-    LuaNova.protected_call(L, 2)
-    result = LuaNova.to_number(L, -1)
-    @test result == 3
-
-    LuaNova.get_global(L, "sum")
-    LuaNova.push_string(L, "a")
-    LuaNova.push_string(L, "b")
-    LuaNova.protected_call(L, 2)
-    result = LuaNova.to_string(L, -1)
-    @test result == "ab"
-
-    LuaNova.get_global(L, "sum")
-    LuaNova.push_boolean(L, true)
-    LuaNova.push_boolean(L, false)
-    LuaNova.protected_call(L, 2)
-    result = LuaNova.to_boolean(L, -1)
-    @test result == false
+    LuaNova.safe_script(
+        L,
+        """
+local p = Point(1.0, 2.0)
+print(p)
+p.x = 3.0
+print(p.x)
+print(p.y)
+p:add(10, 20)
+print(p)
+""",
+    )
 
     LuaNova.close(L)
 

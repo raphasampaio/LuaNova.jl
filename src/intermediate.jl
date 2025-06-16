@@ -32,7 +32,6 @@ function to_boolean(L::LuaState, idx::Integer)
 end
 
 function Base.push!(L::LuaState, x::Real)
-    @show "Pushing Real: ", x
     C.lua_pushnumber(L, x)
     return nothing
 end
