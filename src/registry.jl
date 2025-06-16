@@ -2,6 +2,7 @@
 const REGISTRY = IdDict{Ptr{Cvoid}, Ref}()
 
 function get_reference(L::LuaState, idx::Integer, name::String)
-    ud = LuaNova.C.luaL_checkudata(L, idx, to_cstring(name))
-    return LuaNova.REGISTRY[Ptr{Cvoid}(ud)][]
+    userdata = lua_check_userdata(L, idx, name)
+    pointer = Ptr{Cvoid}(userdata)
+    return REGISTRY[pointer][]
 end

@@ -33,7 +33,7 @@ function from_lua(L::LuaState)
             C.lua_rawget(L, -2)
             name = unsafe_string(C.lua_tostring(L, -1))
             C.lua_pop(L, 2)
-            args[i] = LuaNova.get_reference(L, i, name)
+            args[i] = get_reference(L, i, name)
         else
             error("Unsupported Lua type: ", type_name)
         end
@@ -44,7 +44,7 @@ end
 
 function index(L::Ptr{LuaNova.C.lua_State}, ::Type{T}) where {T}
     str = string(nameof(T))
-    ref = LuaNova.get_reference(L, Int32(1), str)
+    ref = get_reference(L, 1, str)
     key = unsafe_string(LuaNova.C.luaL_checklstring(L, 2, C_NULL))
 
     if hasfield(T, Symbol(key))
@@ -52,7 +52,7 @@ function index(L::Ptr{LuaNova.C.lua_State}, ::Type{T}) where {T}
         push_to_lua!(L, val)
     else
         # otherwise fall back to normal metatable lookup
-        LuaNova.C.luaL_getmetatable(L, to_cstring(str))
+        get_metatable(L, str)
         LuaNova.C.lua_pushvalue(L, 2)
         LuaNova.C.lua_gettable(L, -2)
     end
@@ -73,13 +73,13 @@ function from_lua(L::Ptr{LuaNova.C.lua_State}, idx::Cint, fty::Type)
         # for more complex types you’ve registered, pull the reference back
         # (assumes you used string(nameof(fty)) as the tag)
         tag = to_cstring(string(nameof(fty)))
-        return LuaNova.get_reference(L, LuaNova.C.luaL_checkinteger(L, idx), tag)
+        return get_reference(L, LuaNova.C.luaL_checkinteger(L, idx), tag)
     end
 end
 
 function newindex(L::Ptr{LuaNova.C.lua_State}, ::Type{T}) where {T}
     name = string(nameof(T))
-    ref = LuaNova.get_reference(L, Int32(1), name)
+    ref = get_reference(L, 1, name)
     key = unsafe_string(LuaNova.C.luaL_checklstring(L, 2, C_NULL))
     sym = Symbol(key)
 
@@ -89,7 +89,7 @@ function newindex(L::Ptr{LuaNova.C.lua_State}, ::Type{T}) where {T}
         setfield!(ref, sym, convert(fty, val))
     else
         # fallback: assign into the metatable (so you can still add Lua‐side properties, or let other metamethods catch it)
-        LuaNova.C.luaL_getmetatable(L, to_cstring(name))
+        get_metatable(L, name)
         LuaNova.C.lua_pushvalue(L, 2)   # key
         LuaNova.C.lua_pushvalue(L, 3)   # new value
         LuaNova.C.lua_settable(L, -3)
@@ -100,7 +100,8 @@ end
 
 function garbage_collect(L::Ptr{LuaNova.C.lua_State}, ::Type{T}) where {T}
     name = string(nameof(T))
-    ud = LuaNova.C.luaL_checkudata(L, 1, to_cstring(name))
-    delete!(LuaNova.REGISTRY, Ptr{Cvoid}(ud))
+    userdata = lua_check_userdata(L, 1, name)
+    pointer = Ptr{Cvoid}(userdata)
+    delete!(REGISTRY, pointer)
     return 0
 end
