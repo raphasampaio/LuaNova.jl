@@ -8,8 +8,6 @@ export
     @define_lua_function, 
     @push_lua_function,
     @define_lua_struct,
-    @printfields,
-    # @make_index,
     @push_lua_struct,
     LuaError
 
