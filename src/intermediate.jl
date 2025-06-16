@@ -31,23 +31,32 @@ function to_boolean(L::LuaState, idx::Integer)
     return C.lua_toboolean(L, idx) != 0
 end
 
-function push_number(L::LuaState, x::Real)
+function push_to_lua!(::LuaState, x::Any)
+    throw(ArgumentError("Unsupported type: $(typeof(x))"))
+end
+
+function push_to_lua!(L::LuaState, x::Real)
     C.lua_pushnumber(L, x)
     return nothing
 end
 
-function push_number(L::LuaState, x::Integer)
+function push_to_lua!(L::LuaState, x::Integer)
     C.lua_pushnumber(L, x)
     return nothing
 end
 
-function push_string(L::LuaState, x::String)
+function push_to_lua!(L::LuaState, x::String)
     C.lua_pushstring(L, x)
     return nothing
 end
 
-function push_boolean(L::LuaState, x::Bool)
+function push_to_lua!(L::LuaState, x::Bool)
     C.lua_pushboolean(L, x)
+    return nothing
+end
+
+function push_to_lua!(L::LuaState, ::Nothing)
+    C.lua_pushnil(L)
     return nothing
 end
 
@@ -107,4 +116,8 @@ end
 
 function to_userdata(L::LuaState, idx::Integer)
     return C.lua_touserdata(L, idx)
+end
+
+function check_userdata(L::LuaState, ud::Integer, tname::Ptr{Cchar})
+    return LuaNova.C.luaL_checkudata(L, ud, tname)
 end

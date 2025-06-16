@@ -962,11 +962,11 @@ const LUA_LOADLIBNAME = "package"
 lua_tonumber(L, i) = lua_tonumberx(L, (i), C_NULL)
 #define lua_tointeger(L,i)	lua_tointegerx(L,(i),NULL)
 
-#define lua_pop(L,n)		lua_settop(L, -(n)-1)
+lua_pop(L,n) = lua_settop(L, -(n)-1)
 
 #define lua_newtable(L)		lua_createtable(L, 0, 0)
 
-#define lua_register(L,n,f) (lua_pushcfunction(L, (f)), lua_setglobal(L, (n)))
+function lua_register(L,n,f) lua_pushcfunction(L, (f)); lua_setglobal(L, (n)); end
 
 lua_pushcfunction(L, f) = lua_pushcclosure(L, (f), 0)
 
@@ -988,8 +988,10 @@ lua_tostring(L, i) = lua_tolstring(L, (i), C_NULL)
 
 #define lua_insert(L,idx)	lua_rotate(L, (idx), 1)
 
-#define lua_remove(L,idx)	(lua_rotate(L, (idx), -1), lua_pop(L, 1))
+function lua_remove(L,idx) lua_rotate(L, (idx), -1); lua_pop(L, 1); end
 
 #define lua_replace(L,idx)	(lua_copy(L, -1, (idx)), lua_pop(L, 1))
+
+luaL_getmetatable(L,n) = lua_getfield(L, LUA_REGISTRYINDEX, (n))
 
 end # module
