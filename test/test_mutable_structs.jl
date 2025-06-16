@@ -16,12 +16,10 @@ function add(p::Point, x::Float64, y::Float64)
 end
 @define_lua_function add
 
-function subtract(p::Point, x::Float64, y::Float64)
-    p.x -= x
-    p.y -= y
-    return nothing
+function sum(p::Point)
+    return p.x + p.y
 end
-@define_lua_function subtract
+@define_lua_function sum
 
 function to_string(p::Point)
     return "Point($(p.x), $(p.y))"
@@ -36,22 +34,28 @@ end
         L,
         Point,
         "add", add,
-        "subtract", subtract,
+        "sum", sum,
         "__tostring", to_string,
     )
 
-    LuaNova.safe_script(
-        L,
-        """
-local p = Point(1.0, 2.0)
-print(p)
-p.x = 3.0
-print(p.x)
-print(p.y)
-p:add(10, 20)
-print(p)
-""",
-    )
+    LuaNova.safe_script(L, "p = Point(1.0, 2.0)")
+    LuaNova.safe_script(L, "return p.x")
+    @test LuaNova.to_number(L, -1) == 1.0
+    LuaNova.safe_script(L, "return p.y")
+    @test LuaNova.to_number(L, -1) == 2.0
+
+    LuaNova.safe_script(L, "p.x = 3.0")
+    LuaNova.safe_script(L, "return p.x")
+    @test LuaNova.to_number(L, -1) == 3.0
+    LuaNova.safe_script(L, "p.y = 4.0")
+    LuaNova.safe_script(L, "return p.y")
+    @test LuaNova.to_number(L, -1) == 4.0
+
+    LuaNova.safe_script(L, "return p:sum()")
+    @test LuaNova.to_number(L, -1) == 7.0
+
+    LuaNova.safe_script(L, "return tostring(p)")
+    @test LuaNova.to_string(L, -1) == "Point(3.0, 4.0)"
 
     LuaNova.close(L)
 
