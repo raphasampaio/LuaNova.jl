@@ -5,6 +5,10 @@ export Lua_jll
 
 const UINT_MAX = typemax(Int64)
 
+const __darwin_intptr_t = Clong
+
+const intptr_t = __darwin_intptr_t
+
 const lua_Integer = Clonglong
 
 const lua_Number = Cdouble
@@ -59,7 +63,7 @@ function lua_type(L, idx)
     @ccall liblua.lua_type(L::Ptr{lua_State}, idx::Cint)::Cint
 end
 
-const lua_KContext = Cptrdiff_t
+const lua_KContext = intptr_t
 
 # typedef int ( * lua_KFunction ) ( lua_State * L , int status , lua_KContext ctx )
 const lua_KFunction = Ptr{Cvoid}
@@ -86,11 +90,11 @@ function lua_pushnil(L)
     @ccall liblua.lua_pushnil(L::Ptr{lua_State})::Cvoid
 end
 
-struct var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)"
+struct var"union (unnamed at /Users/raphasampaio/.julia/artifacts/e5eb2e912e208da58b5e3cd49d188a90ccb8ffb9/include/lauxlib.h:196:3)"
     data::NTuple{1024, UInt8}
 end
 
-function Base.getproperty(x::Ptr{var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)"}, f::Symbol)
+function Base.getproperty(x::Ptr{var"union (unnamed at /Users/raphasampaio/.julia/artifacts/e5eb2e912e208da58b5e3cd49d188a90ccb8ffb9/include/lauxlib.h:196:3)"}, f::Symbol)
     f === :n && return Ptr{lua_Number}(x + 0)
     f === :u && return Ptr{Cdouble}(x + 0)
     f === :s && return Ptr{Ptr{Cvoid}}(x + 0)
@@ -100,14 +104,14 @@ function Base.getproperty(x::Ptr{var"union (unnamed at C:\\Users\\rsampaio\\.jul
     return getfield(x, f)
 end
 
-function Base.getproperty(x::var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)", f::Symbol)
-    r = Ref{var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)"}(x)
-    ptr = Base.unsafe_convert(Ptr{var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)"}, r)
+function Base.getproperty(x::var"union (unnamed at /Users/raphasampaio/.julia/artifacts/e5eb2e912e208da58b5e3cd49d188a90ccb8ffb9/include/lauxlib.h:196:3)", f::Symbol)
+    r = Ref{var"union (unnamed at /Users/raphasampaio/.julia/artifacts/e5eb2e912e208da58b5e3cd49d188a90ccb8ffb9/include/lauxlib.h:196:3)"}(x)
+    ptr = Base.unsafe_convert(Ptr{var"union (unnamed at /Users/raphasampaio/.julia/artifacts/e5eb2e912e208da58b5e3cd49d188a90ccb8ffb9/include/lauxlib.h:196:3)"}, r)
     fptr = getproperty(ptr, f)
     GC.@preserve r unsafe_load(fptr)
 end
 
-function Base.setproperty!(x::Ptr{var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)"}, f::Symbol, v)
+function Base.setproperty!(x::Ptr{var"union (unnamed at /Users/raphasampaio/.julia/artifacts/e5eb2e912e208da58b5e3cd49d188a90ccb8ffb9/include/lauxlib.h:196:3)"}, f::Symbol, v)
     return unsafe_store!(getproperty(x, f), v)
 end
 
@@ -120,7 +124,7 @@ function Base.getproperty(x::Ptr{luaL_Buffer}, f::Symbol)
     f === :size && return Ptr{Csize_t}(x + 8)
     f === :n && return Ptr{Csize_t}(x + 16)
     f === :L && return Ptr{Ptr{lua_State}}(x + 24)
-    f === :init && return Ptr{var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)"}(x + 32)
+    f === :init && return Ptr{var"union (unnamed at /Users/raphasampaio/.julia/artifacts/e5eb2e912e208da58b5e3cd49d188a90ccb8ffb9/include/lauxlib.h:196:3)"}(x + 32)
     return getfield(x, f)
 end
 
@@ -907,15 +911,17 @@ const LUA_PATH_MARK = "?"
 
 const LUA_EXEC_DIR = "!"
 
-const LUA_LDIR = "!\\lua\\"
+const LUA_ROOT = "/usr/local/"
 
-const LUA_CDIR = "!\\"
+# Skipping MacroDefinition: const LUA_LDIR = ((LUA_ROOT("share/lua/"))(LUA_VDIR))("/")
 
-# Skipping MacroDefinition: LUA_PATH_DEFAULT LUA_LDIR "?.lua;" LUA_LDIR "?\\init.lua;" LUA_CDIR "?.lua;" LUA_CDIR "?\\init.lua;" LUA_SHRDIR "?.lua;" LUA_SHRDIR "?\\init.lua;" ".\\?.lua;" ".\\?\\init.lua"
+# Skipping MacroDefinition: const LUA_CDIR = ((LUA_ROOT("lib/lua/"))(LUA_VDIR))("/")
 
-# Skipping MacroDefinition: LUA_CPATH_DEFAULT LUA_CDIR "?.dll;" LUA_CDIR "..\\lib\\lua\\" LUA_VDIR "\\?.dll;" LUA_CDIR "loadall.dll;" ".\\?.dll"
+# Skipping MacroDefinition: const LUA_PATH_DEFAULT = (((((((LUA_LDIR("?.lua;"))(LUA_LDIR))("?/init.lua;"))(LUA_CDIR))("?.lua;"))(LUA_CDIR))("?/init.lua;./?.lua;"))("./?/init.lua")
 
-const LUA_DIRSEP = "\\"
+# Skipping MacroDefinition: const LUA_CPATH_DEFAULT = ((LUA_CDIR("?.so;"))(LUA_CDIR))("loadall.so;./?.so")
+
+const LUA_DIRSEP = "/"
 
 const LUA_IGMARK = "-"
 
