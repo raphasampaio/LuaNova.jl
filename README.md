@@ -62,11 +62,13 @@ mutable struct Rectangle
     width::Float64
     height::Float64
 end
+
 @define_lua_struct Rectangle
 
 function area(r::Rectangle)
     return r.width * r.height
 end
+
 @define_lua_function area
 
 function scale!(r::Rectangle, factor::Float64)
@@ -74,16 +76,19 @@ function scale!(r::Rectangle, factor::Float64)
     r.height *= factor
     return nothing
 end
+
 @define_lua_function scale!
 
 function add(r1::Rectangle, r2::Rectangle)
     return Rectangle(r1.width + r2.width, r1.height + r2.height)
 end
+
 @define_lua_function add
 
 function to_string(r::Rectangle)
     return "Rectangle(width=$(r.width), height=$(r.height))"
 end
+
 @define_lua_function to_string
 
 L = LuaNova.new_state()
