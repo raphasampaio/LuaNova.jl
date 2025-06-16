@@ -42,30 +42,6 @@ function from_lua(L::LuaState)
     return args
 end
 
-function to_lua(::LuaState, x::Any)
-    throw(ArgumentError("Unsupported type: $(typeof(x))"))
-end
-
-function to_lua(L::LuaState, x::Real)
-    push_to_lua!(L, x)
-    return 1
-end
-
-function to_lua(L::LuaState, x::String)
-    push_to_lua!(L, x)
-    return 1
-end
-
-function to_lua(L::LuaState, x::Bool)
-    push_to_lua!(L, x)
-    return 1
-end
-
-function to_lua(L::LuaState, ::Nothing)
-    C.lua_pushnil(L)
-    return 1
-end
-
 function index(L::Ptr{LuaNova.C.lua_State}, ::Type{T}) where {T}
     str = string(nameof(T))
     ref = LuaNova.get_reference(L, Int32(1), str)

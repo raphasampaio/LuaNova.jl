@@ -67,7 +67,8 @@ end
 function Point_sum(L::Ptr{LuaNova.C.lua_State})::Cint
     args = LuaNova.from_lua(L)
     result = mysum(args...)
-    return LuaNova.to_lua(L, result)
+    LuaNova.push_to_lua!(L, result)
+    return 1
 end
 
 # __gc metamethod to remove from registry when Lua collects the userdata

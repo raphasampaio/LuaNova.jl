@@ -30,7 +30,8 @@ macro define_lua_function(function_name)
         function $function_name(L::Ptr{Cvoid})::Cint
             args = LuaNova.from_lua(L)
             result = $function_name(args...)
-            return LuaNova.to_lua(L, result)
+            LuaNova.push_to_lua!(L, result)
+            return 1
         end
     end)
 end
