@@ -66,12 +66,7 @@ function get_global(L::LuaState, name::String)
 end
 
 function set_global(L::LuaState, name::String)
-    C.lua_setglobal(L, name)
-    return nothing
-end
-
-function push_cfunction(L::LuaState, f::Ptr{Nothing})
-    C.lua_pushcfunction(L, f)
+    C.lua_setglobal(L, to_cstring(name))
     return nothing
 end
 
@@ -106,18 +101,55 @@ function new_userdata(L::LuaState, size::Integer)
     return C.lua_newuserdatauv(L, size, 0)
 end
 
+function new_metatable(L::LuaState, name::String)
+    return C.luaL_newmetatable(L, to_cstring(name))
+end
+
 function set_metatable(L::LuaState, idx::Integer)
-    return C.lua_setmetatable(L, idx)
+    C.lua_setmetatable(L, idx)
+    return nothing
+end
+
+function set_metatable(L::LuaState, name::String)
+    C.luaL_setmetatable(L, to_cstring(name))
+    return nothing
 end
 
 function get_metatable(L::LuaState, idx::Integer)
     return C.lua_getmetatable(L, idx)
 end
 
+function get_metatable(L::LuaState, name::String)
+    return C.luaL_getmetatable(L, to_cstring(name))
+end
+
 function to_userdata(L::LuaState, idx::Integer)
     return C.lua_touserdata(L, idx)
 end
 
-function check_userdata(L::LuaState, ud::Integer, tname::Ptr{Cchar})
-    return LuaNova.C.luaL_checkudata(L, ud, tname)
+function lua_check_userdata(L::LuaState, idx::Integer, name::String)
+    return C.luaL_checkudata(L, Int32(idx), to_cstring(name))
+end
+
+function create_register(name::String, f::Ptr{Cvoid})
+    return C.luaL_Reg(to_cstring(name), f)
+end
+
+function create_null_register()
+    return C.luaL_Reg(C_NULL, C_NULL)
+end
+
+function set_functions(L::LuaState, methods::Vector{C.luaL_Reg})
+    C.luaL_setfuncs(L, pointer(methods), 0)
+    return nothing
+end
+
+function lua_pop!(L::LuaState, n::Integer)
+    C.lua_pop(L, n)
+    return nothing
+end
+
+function push_cfunction(L::LuaState, cfunction::Union{Ptr{Cvoid}, Ptr{Nothing}})
+    C.lua_pushcfunction(L, cfunction)
+    return nothing
 end
