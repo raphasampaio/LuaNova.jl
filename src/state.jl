@@ -60,7 +60,6 @@ function index(L::Ptr{LuaNova.C.lua_State}, ::Type{T}) where {T}
     return 1
 end
 
-
 function from_lua(L::Ptr{LuaNova.C.lua_State}, idx::Cint, fty::Type)
     if fty == Float64
         return LuaNova.C.luaL_checknumber(L, idx)
@@ -78,12 +77,11 @@ function from_lua(L::Ptr{LuaNova.C.lua_State}, idx::Cint, fty::Type)
     end
 end
 
-
 function newindex(L::Ptr{LuaNova.C.lua_State}, ::Type{T}) where {T}
     name = string(nameof(T))
-    ref  = LuaNova.get_reference(L, Int32(1), name)
-    key  = unsafe_string(LuaNova.C.luaL_checklstring(L, 2, C_NULL))
-    sym  = Symbol(key)
+    ref = LuaNova.get_reference(L, Int32(1), name)
+    key = unsafe_string(LuaNova.C.luaL_checklstring(L, 2, C_NULL))
+    sym = Symbol(key)
 
     if hasfield(T, sym)
         fty = fieldtype(T, sym)

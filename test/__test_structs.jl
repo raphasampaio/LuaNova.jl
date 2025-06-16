@@ -89,7 +89,7 @@ end
 
 function Point_sum(L::Ptr{LuaNova.C.lua_State})::Cint
     # 1) get the raw userdata pointer for mutation
-    ud   = LuaNova.C.luaL_checkudata(L, 1, to_cstring("Point"))
+    ud = LuaNova.C.luaL_checkudata(L, 1, to_cstring("Point"))
     pptr = Ptr{Point}(ud)
 
     # 2) read the deltas

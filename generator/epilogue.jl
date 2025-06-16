@@ -33,4 +33,4 @@ lua_tostring(L, i) = lua_tolstring(L, (i), C_NULL)
 
 #define lua_replace(L,idx)	(lua_copy(L, -1, (idx)), lua_pop(L, 1))
 
-luaL_getmetatable(L,n) = lua_getfield(L, LUA_REGISTRYINDEX, (n))
+luaL_getmetatable(L, n) = lua_getfield(L, LUA_REGISTRYINDEX, (n))

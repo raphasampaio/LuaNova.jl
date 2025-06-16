@@ -49,7 +49,7 @@ end
 # ─── 3c) __index metamethod for reading .x and .y (and falling back to methods) ─
 
 function Point_index(L::Ptr{LuaNova.C.lua_State})::Cint
-    p   = check_Point(L, Int32(1))
+    p = check_Point(L, Int32(1))
     key = unsafe_string(LuaNova.C.luaL_checklstring(L, 2, C_NULL))
     if key == "x"
         LuaNova.C.lua_pushnumber(L, p.x)
@@ -67,10 +67,10 @@ end
 # ─── 3d) __newindex metamethod for writing .x and .y ──────────────────────────
 
 function Point_newindex(L::Ptr{LuaNova.C.lua_State})::Cint
-    ud   = LuaNova.C.luaL_checkudata(L, 1, to_cstring("Point"))
+    ud = LuaNova.C.luaL_checkudata(L, 1, to_cstring("Point"))
     pptr = Ptr{Point}(ud)
-    key  = unsafe_string(LuaNova.C.luaL_checklstring(L, 2, C_NULL))
-    val  = LuaNova.C.luaL_checknumber(L, 3)
+    key = unsafe_string(LuaNova.C.luaL_checklstring(L, 2, C_NULL))
+    val = LuaNova.C.luaL_checknumber(L, 3)
 
     old = unsafe_load(pptr)
     if key == "x"
@@ -87,7 +87,7 @@ end
 # ─── 3e) sum method: add (dx,dy) and write back ────────────────────────────────
 
 function Point_sum(L::Ptr{LuaNova.C.lua_State})::Cint
-    ud   = LuaNova.C.luaL_checkudata(L, 1, to_cstring("Point"))
+    ud = LuaNova.C.luaL_checkudata(L, 1, to_cstring("Point"))
     pptr = Ptr{Point}(ud)
 
     dx = LuaNova.C.luaL_checknumber(L, 2)
@@ -101,11 +101,11 @@ end
 
 # ─── 4) make C‐callable function pointers ───────────────────────────────────────
 
-const c_Point_new      = @cfunction(Point_new,      Cint, (Ptr{LuaNova.C.lua_State},))
+const c_Point_new = @cfunction(Point_new, Cint, (Ptr{LuaNova.C.lua_State},))
 const c_Point_tostring = @cfunction(Point_tostring, Cint, (Ptr{LuaNova.C.lua_State},))
-const c_Point_index    = @cfunction(Point_index,    Cint, (Ptr{LuaNova.C.lua_State},))
+const c_Point_index = @cfunction(Point_index, Cint, (Ptr{LuaNova.C.lua_State},))
 const c_Point_newindex = @cfunction(Point_newindex, Cint, (Ptr{LuaNova.C.lua_State},))
-const c_Point_sum      = @cfunction(Point_sum,      Cint, (Ptr{LuaNova.C.lua_State},))
+const c_Point_sum = @cfunction(Point_sum, Cint, (Ptr{LuaNova.C.lua_State},))
 
 # ─── 5) hook it all up in Lua ─────────────────────────────────────────────────
 
@@ -118,16 +118,16 @@ LuaNova.C.luaL_newmetatable(L, to_cstring("Point"))
 # metamethods
 regs = [
     LuaNova.C.luaL_Reg(to_cstring("__tostring"), c_Point_tostring),
-    LuaNova.C.luaL_Reg(to_cstring("__index"),     c_Point_index),
-    LuaNova.C.luaL_Reg(to_cstring("__newindex"),  c_Point_newindex),
-    LuaNova.C.luaL_Reg(C_NULL,              C_NULL),
+    LuaNova.C.luaL_Reg(to_cstring("__index"), c_Point_index),
+    LuaNova.C.luaL_Reg(to_cstring("__newindex"), c_Point_newindex),
+    LuaNova.C.luaL_Reg(C_NULL, C_NULL),
 ]
 LuaNova.C.luaL_setfuncs(L, pointer(regs), 0)
 
 # normal methods (available as p:sum)
 methods = [
     LuaNova.C.luaL_Reg(to_cstring("sum"), c_Point_sum),
-    LuaNova.C.luaL_Reg(C_NULL,      C_NULL),
+    LuaNova.C.luaL_Reg(C_NULL, C_NULL),
 ]
 LuaNova.C.luaL_setfuncs(L, pointer(methods), 0)
 
@@ -140,14 +140,17 @@ LuaNova.C.lua_setglobal(L, to_cstring("Point"))
 
 # ─── 6) smoke–test it ─────────────────────────────────────────────────────────
 
-LuaNova.safe_script(L, """
+LuaNova.safe_script(
+    L,
+    """
 local p = Point(1.2, 3.4)
 print(p)         -- Point(1.2, 3.4)
 p.x = 9.8
 print(p)         -- Point(9.8, 3.4)
 p:sum(10, 20)
 print(p)         -- Point(19.8, 23.4)
-""")
+""",
+)
 
 LuaNova.close(L)
 
