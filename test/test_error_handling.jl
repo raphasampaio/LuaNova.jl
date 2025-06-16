@@ -7,7 +7,7 @@ using Test
     L = LuaNova.new_state()
     LuaNova.open_libs(L)
 
-    LuaNova.push_string(L, "error('test error')")
+    LuaNova.push!(L, "error('test error')")
     @test_throws LuaError LuaNova.protected_call(L, 0)
 
     LuaNova.close(L)

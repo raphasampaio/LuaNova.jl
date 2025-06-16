@@ -17,7 +17,7 @@ end
     LuaNova.set_global(L, "sin")
 
     LuaNova.get_global(L, "sin")
-    LuaNova.push_number(L, 1)
+    LuaNova.push!(L, 1)
     LuaNova.protected_call(L, 1)
     result = LuaNova.to_number(L, -1)
     @test result ≈ sin(1)

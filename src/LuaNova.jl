@@ -3,7 +3,6 @@ module LuaNova
 export 
     from_lua,
     to_lua,
-    register_lua,
     to_cstring,
     @define_lua_function, 
     @push_lua_function,
