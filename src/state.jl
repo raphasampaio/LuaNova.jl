@@ -47,21 +47,39 @@ function to_lua(::LuaState, x::Any)
 end
 
 function to_lua(L::LuaState, x::Real)
-    push_number(L, x)
+    push!(L, x)
     return 1
 end
 
 function to_lua(L::LuaState, x::String)
-    push_string(L, x)
+    push!(L, x)
     return 1
 end
 
 function to_lua(L::LuaState, x::Bool)
-    push_boolean(L, x)
+    push!(L, x)
     return 1
 end
 
 function to_lua(L::LuaState, ::Nothing)
     C.lua_pushnil(L)
+    return 1
+end
+
+function index(L::Ptr{LuaNova.C.lua_State}, ::Type{T}) where {T}
+    str = string(nameof(T))
+    ref = LuaNova.get_reference(L, Int32(1), str)
+    key = unsafe_string(LuaNova.C.luaL_checklstring(L, 2, C_NULL))
+
+    if hasfield(T, Symbol(key))
+        val = getfield(ref, Symbol(key))
+        push!(L, val)
+    else
+        # otherwise fall back to normal metatable lookup
+        LuaNova.C.luaL_getmetatable(L, to_cstring(str))
+        LuaNova.C.lua_pushvalue(L, 2)
+        LuaNova.C.lua_gettable(L, -2)
+    end
+
     return 1
 end

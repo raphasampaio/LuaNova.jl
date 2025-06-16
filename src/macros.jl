@@ -60,34 +60,122 @@ macro define_lua_struct(struct_name)
     end)
 end
 
+macro printfields(T)
+    T_ty = if T isa Symbol
+        getfield(__module__, T)
+    elseif T isa Expr
+        eval(__module__, T)
+    else
+        error("@printfields: expected a type name or expression, got $T")
+    end
+
+    names = fieldnames(T_ty)      # tuple of Symbols
+    types = fieldtypes(T_ty)      # tuple of Types
+
+    stmts = Expr[]
+    for (n, t) in zip(names, types)
+        # string(n) → "a", QuoteNode(t) → literal type
+        push!(stmts, :(
+            println($(QuoteNode(string(n))), " :: ", $(QuoteNode(t)))
+        ))
+    end
+
+    return Expr(:block, stmts...)
+end
+
+# macro make_index(T)
+#      # resolve type and its fields in caller’s module
+#     mod = __module__
+#     T_ty = T isa Symbol ? getfield(mod, T) : eval(mod, T)
+#      fields   = fieldnames(T_ty)
+#      T_str    = string(T)
+#      idx_fn   = Symbol(string(T)*"_index")
+#      new_fn   = Symbol(string(T)*"_newindex")
+
+#     # build __index chain
+#     cond    = :(key == $(string(fields[1])))
+#     body    = :(LuaNova.push(L, getfield(obj, $(QuoteNode(fields[1])))))
+#     current = Expr(:if, cond, body, nothing)
+#     tail    = current
+#     for f in fields[2:end]
+#         cond = :(key == $(string(f)))
+#         body = :(LuaNova.push(L, getfield(obj, $(QuoteNode(f)))))
+#         next = Expr(:if, cond, body, nothing)
+#         tail.args[3] = next
+#         tail = next
+#     end
+#     tail.args[3] = quote
+#         LuaNova.C.luaL_getmetatable(L, to_cstring($T_str))
+#         LuaNova.C.lua_pushvalue(L, 2)
+#         LuaNova.C.lua_gettable(L, -2)
+#     end
+
+#     # build __newindex chain
+#     cond2   = :(key == $(string(fields[1])))
+#     body2   = :(obj.$(fields[1]) = val)
+#     curr2   = Expr(:if, cond2, body2, nothing)
+#     tail2   = curr2
+#     for f in fields[2:end]
+#         cond2 = :(key == $(string(f)))
+#         body2 = :(obj.$(f) = val)
+#         next2 = Expr(:if, cond2, body2, nothing)
+#         tail2.args[3] = next2
+#         tail2 = next2
+#     end
+#     tail2.args[3] = :(LuaNova.C.luaL_argerror(L, 2, to_cstring("invalid field")))
+
+#     return esc(quote
+#         function $(idx_fn)(L::Ptr{LuaNova.C.lua_State})::Cint
+#             obj = LuaNova.get_reference(L, Int32(1), $T_str)
+#             key = unsafe_string(LuaNova.C.luaL_checklstring(L, 2, C_NULL))
+#             $current
+#             return 1
+#         end
+
+#         function $(new_fn)(L::Ptr{LuaNova.C.lua_State})::Cint
+#             obj = LuaNova.get_reference(L, Int32(1), $T_str)
+#             key = unsafe_string(LuaNova.C.luaL_checklstring(L, 2, C_NULL))
+#             val = (LuaNova.from_lua(L))[2]
+#             $curr2
+#             return 0
+#         end
+#     end)
+# end
+
 macro push_lua_struct(L, struct_name, args...)
     n = length(args)
     isodd(n) && error("@push_lua_struct needs key fn pairs (got $n args)")
 
     struct_string = string(struct_name)
+    gc_fn    = Symbol(string(struct_name)*"_gc")
+    idx_fn   = Symbol(string(struct_name)*"_index")
+    new_fn   = Symbol(string(struct_name)*"_newindex")
 
     method_entries = Expr[]
-    push!(method_entries, :(LuaNova.C.luaL_Reg(to_cstring("__gc"), @cfunction(Point_gc, Cint, (Ptr{LuaNova.C.lua_State},)))))
-    push!(method_entries, :(LuaNova.C.luaL_Reg(to_cstring("__index"), @cfunction(Point_index, Cint, (Ptr{LuaNova.C.lua_State},)))))
-    push!(method_entries, :(LuaNova.C.luaL_Reg(to_cstring("__newindex"), @cfunction(Point_newindex, Cint, (Ptr{LuaNova.C.lua_State},)))))
+    push!(method_entries,
+        :(LuaNova.C.luaL_Reg(to_cstring("__gc"),      @cfunction($(gc_fn),  Cint, (Ptr{LuaNova.C.lua_State},)))))
+    push!(method_entries,
+        :(LuaNova.C.luaL_Reg(to_cstring("__index"),   @cfunction($(idx_fn), Cint, (Ptr{LuaNova.C.lua_State},)))))
+    push!(method_entries,
+        :(LuaNova.C.luaL_Reg(to_cstring("__newindex"),@cfunction($(new_fn), Cint, (Ptr{LuaNova.C.lua_State},)))))
 
     for i in 1:2:n
-        key = args[i]
-        fn = args[i+1]
-        push!(method_entries, :(LuaNova.C.luaL_Reg(to_cstring($key), @cfunction($fn, Cint, (Ptr{Cvoid},)))))
+        key = args[i]; fn = args[i+1]
+        push!(method_entries,
+            :(LuaNova.C.luaL_Reg(to_cstring($key), @cfunction($fn, Cint, (Ptr{Cvoid},)))))
     end
     push!(method_entries, :(LuaNova.C.luaL_Reg(C_NULL, C_NULL)))
     methods_vect = Expr(:vect, method_entries...)
 
     return esc(quote
         LuaNova.C.luaL_newmetatable($L, to_cstring($(struct_string)))
-
         local methods = $methods_vect
         LuaNova.C.luaL_setfuncs($L, pointer(methods), 0)
-
         LuaNova.C.lua_pop($L, 1)
 
-        LuaNova.C.lua_pushcclosure($L, @cfunction(Point, Cint, (Ptr{LuaNova.C.lua_State},)), 0)
-        LuaNova.C.lua_setglobal($L, to_cstring("Point"))
+        # constructor
+        LuaNova.C.lua_pushcclosure($L,
+            @cfunction($struct_name, Cint, (Ptr{LuaNova.C.lua_State},)), 0)
+        LuaNova.C.lua_setglobal($L, to_cstring($struct_string))
     end)
 end
