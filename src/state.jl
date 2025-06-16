@@ -72,7 +72,7 @@ function from_lua(L::Ptr{LuaNova.C.lua_State}, idx::Cint, fty::Type)
     else
         # for more complex types you’ve registered, pull the reference back
         # (assumes you used string(nameof(fty)) as the tag)
-        tag = to_cstring(string(nameof(fty)))
+        tag = string(nameof(fty))
         return get_reference(L, LuaNova.C.luaL_checkinteger(L, idx), tag)
     end
 end

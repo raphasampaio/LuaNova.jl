@@ -40,7 +40,7 @@ macro push_lua_function(L, lua_function, julia_function)
     return esc(quote
         f = @cfunction($julia_function, Cint, (Ptr{Cvoid},))
         LuaNova.C.lua_pushcfunction($L, f)
-        LuaNova.C.lua_setglobal($L, $lua_function)
+        LuaNova.set_global($L, $lua_function)
     end)
 end
 
@@ -128,6 +128,6 @@ macro push_lua_struct(L, struct_name, args...)
 
         # constructor
         LuaNova.C.lua_pushcclosure($L, @cfunction($struct_name, Cint, (Ptr{LuaNova.C.lua_State},)), 0)
-        LuaNova.C.lua_setglobal($L, to_cstring($struct_string))
+        LuaNova.set_global($L, $struct_string)
     end)
 end

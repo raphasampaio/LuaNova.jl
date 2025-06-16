@@ -66,7 +66,7 @@ function get_global(L::LuaState, name::String)
 end
 
 function set_global(L::LuaState, name::String)
-    C.lua_setglobal(L, name)
+    C.lua_setglobal(L, to_cstring(name))
     return nothing
 end
 
