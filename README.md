@@ -6,7 +6,11 @@
 
 ## Introduction
 
-LuaNova.jl is a Julia package designed to ...
+LuaNova.jl is a lightweight Julia package that makes it easy to embed a Lua interpreter in Julia and expose Julia functions, methods, and structs directly to Lua scripts. With LuaNova you can:
+
+- **Bind Julia functions** (including multiple‐dispatch methods) as global Lua functions  
+- **Expose Julia structs** to Lua, complete with methods and [metamethods](https://www.lua.org/manual/5.4/manual.html#2.4) (`__add`, `__tostring`, etc.)  
+- **Call Lua code safely** from Julia and convert returned values back into native Julia types
 
 ## Getting Started
 
