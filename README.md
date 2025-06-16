@@ -20,14 +20,34 @@ julia> ] add LuaNova
 
 ```julia
 using LuaNova
-function add(a::Float64, b::Float64)
+
+function combine(a::Float64, b::Float64)
     return a + b
 end
-@define_lua_function add
+
+function combine(a::String, b::String)
+    return a * b
+end
+
+@define_lua_function combine
 
 L = LuaNova.new_state()
 LuaNova.open_libs(L)
-LuaNova.push_lua_function(L, add, "add")
+
+@push_lua_function(L, "combine", combine)
+
+LuaNova.safe_script(
+    L, """
+result1 = combine(3.0, 4.0)
+assert(result1 == 7.0)
+
+result2 = combine("Hello, ", "World!")
+assert(result2 == "Hello, World!")
+""",
+)
+
+LuaNova.close(L)
+```
 
 ### Example: Binding a struct to Lua
 
