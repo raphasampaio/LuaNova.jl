@@ -1,4 +1,4 @@
-module TestMacros
+module TestFunctions
 
 using LuaNova
 using Test
@@ -17,7 +17,7 @@ end
 
 @define_lua_function mysum
 
-@testset "Macros" begin
+@testset "Functions" begin
     L = LuaNova.new_state()
     LuaNova.open_libs(L)
 
