@@ -3,7 +3,7 @@
 lua_tonumber(L, i) = lua_tonumberx(L, (i), C_NULL)
 #define lua_tointeger(L,i)	lua_tointegerx(L,(i),NULL)
 
-#define lua_pop(L,n)		lua_settop(L, -(n)-1)
+lua_pop(L, n) = lua_settop(L, -(n)-1)
 
 #define lua_newtable(L)		lua_createtable(L, 0, 0)
 
