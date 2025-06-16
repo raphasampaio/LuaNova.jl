@@ -26,6 +26,11 @@ function to_string(p::Point)
 end
 @define_lua_function to_string
 
+function sum_points(p1::Point, p2::Point)
+    return Point(p1.x + p2.x, p1.y + p2.y)
+end
+@define_lua_function sum_points
+
 @testset "Mutable Structs" begin
     L = LuaNova.new_state()
     LuaNova.open_libs(L)
@@ -36,6 +41,7 @@ end
         "add", add,
         "sum", sum,
         "__tostring", to_string,
+        "__add", sum_points,
     )
 
     LuaNova.safe_script(L, "p = Point(1.0, 2.0)")
@@ -56,6 +62,11 @@ end
 
     LuaNova.safe_script(L, "return tostring(p)")
     @test LuaNova.to_string(L, -1) == "Point(3.0, 4.0)"
+
+    LuaNova.safe_script(L, "p1 = Point(1.0, 2.0)")
+    LuaNova.safe_script(L, "p2 = Point(3.0, 4.0)")
+    LuaNova.safe_script(L, "p3 = p1 + p2")
+    LuaNova.safe_script(L, "print(p3)")
 
     LuaNova.close(L)
 

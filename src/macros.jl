@@ -26,12 +26,8 @@ macro define_lua_struct(struct_name)
     return esc(quote
         function $struct_name(L::Ptr{LuaNova.C.lua_State})::Cint
             args = LuaNova.from_lua(L)
-            object = $struct_name(args...)
-
-            userdata = LuaNova.C.lua_newuserdatauv(L, Csize_t(0), 0)
-            LuaNova.REGISTRY[Ptr{Cvoid}(userdata)] = Ref(object)
-            LuaNova.set_metatable(L, $struct_string)
-
+            result = $struct_name(args...)
+            LuaNova.push_to_lua!(L, result)
             return 1
         end
 
