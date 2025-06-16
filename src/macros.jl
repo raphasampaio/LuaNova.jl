@@ -3,17 +3,16 @@ macro define_lua_function(function_name)
         function $function_name(L::Ptr{Cvoid})::Cint
             args = LuaNova.from_lua(L)
             result = $function_name(args...)
-            LuaNova.push_to_lua!(L, result)
-            return 1
+            if result isa Tuple
+                for value in result
+                    LuaNova.push_to_lua!(L, value)
+                end
+                return length(result)
+            else
+                LuaNova.push_to_lua!(L, result)
+                return 1
+            end
         end
-    end)
-end
-
-macro push_lua_function(L, lua_function, julia_function)
-    return esc(quote
-        f = @cfunction($julia_function, Cint, (Ptr{Cvoid},))
-        LuaNova.push_cfunction($L, f)
-        LuaNova.set_global($L, $lua_function)
     end)
 end
 
@@ -42,6 +41,14 @@ macro define_lua_struct(struct_name)
         function $(garbage_collect_function)(L::Ptr{LuaNova.C.lua_State})::Cint
             return LuaNova.garbage_collect(L, $(struct_name))
         end
+    end)
+end
+
+macro push_lua_function(L, lua_function, julia_function)
+    return esc(quote
+        f = @cfunction($julia_function, Cint, (Ptr{Cvoid},))
+        LuaNova.push_cfunction($L, f)
+        LuaNova.set_global($L, $lua_function)
     end)
 end
 
