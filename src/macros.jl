@@ -76,28 +76,6 @@ macro define_lua_struct(struct_name)
     end)
 end
 
-macro printfields(T)
-    T_ty = if T isa Symbol
-        getfield(__module__, T)
-    elseif T isa Expr
-        eval(__module__, T)
-    else
-        error("@printfields: expected a type name or expression, got $T")
-    end
-
-    names = fieldnames(T_ty)
-    types = fieldtypes(T_ty)
-
-    stmts = Expr[]
-    for (n, t) in zip(names, types)
-        push!(stmts, :(
-            println($(QuoteNode(string(n))), " :: ", $(QuoteNode(t)))
-        ))
-    end
-
-    return Expr(:block, stmts...)
-end
-
 macro push_lua_struct(L, struct_name, args...)
     n = length(args)
     isodd(n) && error("@push_lua_struct needs key fn pairs (got $n args)")
