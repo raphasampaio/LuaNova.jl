@@ -47,17 +47,17 @@ function to_lua(::LuaState, x::Any)
 end
 
 function to_lua(L::LuaState, x::Real)
-    push!(L, x)
+    push_to_lua!(L, x)
     return 1
 end
 
 function to_lua(L::LuaState, x::String)
-    push!(L, x)
+    push_to_lua!(L, x)
     return 1
 end
 
 function to_lua(L::LuaState, x::Bool)
-    push!(L, x)
+    push_to_lua!(L, x)
     return 1
 end
 
@@ -73,7 +73,7 @@ function index(L::Ptr{LuaNova.C.lua_State}, ::Type{T}) where {T}
 
     if hasfield(T, Symbol(key))
         val = getfield(ref, Symbol(key))
-        push!(L, val)
+        push_to_lua!(L, val)
     else
         # otherwise fall back to normal metatable lookup
         LuaNova.C.luaL_getmetatable(L, to_cstring(str))

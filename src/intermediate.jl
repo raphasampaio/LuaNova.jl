@@ -31,22 +31,22 @@ function to_boolean(L::LuaState, idx::Integer)
     return C.lua_toboolean(L, idx) != 0
 end
 
-function Base.push!(L::LuaState, x::Real)
+function push_to_lua!(L::LuaState, x::Real)
     C.lua_pushnumber(L, x)
     return nothing
 end
 
-function Base.push!(L::LuaState, x::Integer)
+function push_to_lua!(L::LuaState, x::Integer)
     C.lua_pushnumber(L, x)
     return nothing
 end
 
-function Base.push!(L::LuaState, x::String)
+function push_to_lua!(L::LuaState, x::String)
     C.lua_pushstring(L, x)
     return nothing
 end
 
-function Base.push!(L::LuaState, x::Bool)
+function push_to_lua!(L::LuaState, x::Bool)
     C.lua_pushboolean(L, x)
     return nothing
 end

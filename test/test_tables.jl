@@ -8,11 +8,11 @@ using Test
     LuaNova.open_libs(L)
 
     LuaNova.new_table(L)
-    LuaNova.push!(L, "key")
-    LuaNova.push!(L, 42)
+    LuaNova.push_to_lua!(L, "key")
+    LuaNova.push_to_lua!(L, 42)
     LuaNova.set_table(L, -3)
 
-    LuaNova.push!(L, "key")
+    LuaNova.push_to_lua!(L, "key")
     LuaNova.get_table(L, -2)
     result = LuaNova.to_number(L, -1)
     @test result == 42
