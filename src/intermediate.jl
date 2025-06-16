@@ -135,3 +135,11 @@ end
 function lua_check_userdata(L::LuaState, idx::Integer, name::String)
     return C.luaL_checkudata(L, Int32(idx), to_cstring(name))
 end
+
+function create_register(name::String, f::C.lua_CFunction)
+    return C.luaL_Reg(to_cstring(name), f)
+end
+
+function create_null_register()
+    return C.luaL_Reg(C_NULL, C_NULL)
+end

@@ -108,16 +108,16 @@ macro push_lua_struct(L, struct_name, args...)
     new_fn = Symbol(string(struct_name) * "_newindex")
 
     method_entries = Expr[]
-    push!(method_entries, :(LuaNova.C.luaL_Reg(to_cstring("__gc"), @cfunction($(gc_fn), Cint, (Ptr{LuaNova.C.lua_State},)))))
-    push!(method_entries, :(LuaNova.C.luaL_Reg(to_cstring("__index"), @cfunction($(idx_fn), Cint, (Ptr{LuaNova.C.lua_State},)))))
-    push!(method_entries, :(LuaNova.C.luaL_Reg(to_cstring("__newindex"), @cfunction($(new_fn), Cint, (Ptr{LuaNova.C.lua_State},)))))
+    push!(method_entries, :(LuaNova.create_register("__gc", @cfunction($(gc_fn), Cint, (Ptr{LuaNova.C.lua_State},)))))
+    push!(method_entries, :(LuaNova.create_register("__index", @cfunction($(idx_fn), Cint, (Ptr{LuaNova.C.lua_State},)))))
+    push!(method_entries, :(LuaNova.create_register("__newindex", @cfunction($(new_fn), Cint, (Ptr{LuaNova.C.lua_State},)))))
 
     for i in 1:2:n
         key = args[i]
         fn = args[i+1]
-        push!(method_entries, :(LuaNova.C.luaL_Reg(to_cstring($key), @cfunction($fn, Cint, (Ptr{Cvoid},)))))
+        push!(method_entries, :(LuaNova.create_register($key, @cfunction($fn, Cint, (Ptr{Cvoid},)))))
     end
-    push!(method_entries, :(LuaNova.C.luaL_Reg(C_NULL, C_NULL)))
+    push!(method_entries, :(LuaNova.create_null_register()))
     methods_vect = Expr(:vect, method_entries...)
 
     return esc(quote
