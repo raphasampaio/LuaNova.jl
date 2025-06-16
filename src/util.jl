@@ -1,4 +1,4 @@
-function to_cstring(s::AbstractString) 
+function to_cstring(s::AbstractString)
     return Base.unsafe_convert(Ptr{Cchar}, pointer(s))
 end
 

@@ -31,10 +31,6 @@ function to_boolean(L::LuaState, idx::Integer)
     return C.lua_toboolean(L, idx) != 0
 end
 
-function push_to_lua!(::LuaState, x::Any)
-    throw(ArgumentError("Unsupported type: $(typeof(x))"))
-end
-
 function push_to_lua!(L::LuaState, x::Real)
     C.lua_pushnumber(L, x)
     return nothing
@@ -57,6 +53,14 @@ end
 
 function push_to_lua!(L::LuaState, ::Nothing)
     C.lua_pushnil(L)
+    return nothing
+end
+
+function push_to_lua!(L::LuaState, x::T) where {T}
+    struct_string = to_string(T)
+    userdata = new_userdata(L, 0)
+    REGISTRY[userdata] = Ref(x)
+    set_metatable(L, struct_string)
     return nothing
 end
 
@@ -97,8 +101,8 @@ function load_string(L::LuaState, s::String)
     return nothing
 end
 
-function new_userdata(L::LuaState, size::Integer)
-    return C.lua_newuserdatauv(L, size, 0)
+function new_userdata(L::LuaState, size::Integer)::Ptr{Cvoid}
+    return C.lua_newuserdatauv(L, Csize_t(size), 0)
 end
 
 function new_metatable(L::LuaState, name::String)
@@ -125,6 +129,10 @@ end
 
 function to_userdata(L::LuaState, idx::Integer)
     return C.lua_touserdata(L, idx)
+end
+
+function to_userdata(L::LuaState, idx::Integer, ::Type{T}) where {T}
+    return get_reference(L, idx, to_string(T))
 end
 
 function lua_check_userdata(L::LuaState, idx::Integer, name::String)
