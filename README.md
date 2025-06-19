@@ -1,4 +1,4 @@
-# LuaNova.jl
+# LuaNova.jl 🌑
 
 [![CI](https://github.com/raphasampaio/LuaNova.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/raphasampaio/LuaNova.jl/actions/workflows/CI.yml)
 [![codecov](https://codecov.io/gh/raphasampaio/LuaNova.jl/graph/badge.svg?token=Qkg4DKh6HJ)](https://codecov.io/gh/raphasampaio/LuaNova.jl)
