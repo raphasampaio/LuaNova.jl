@@ -56,9 +56,10 @@ macro push_lua_struct(L, lua_struct, julia_struct, args...)
     n = length(args)
     isodd(n) && error("@push_lua_struct needs key fn pairs (got $n args)")
 
-    gc_fn = Symbol(string(julia_struct) * "_gc")
-    idx_fn = Symbol(string(julia_struct) * "_index")
-    new_fn = Symbol(string(julia_struct) * "_newindex")
+    julia_struct_name = string(julia_struct)
+    gc_fn = Symbol(julia_struct_name * "_gc")
+    idx_fn = Symbol(julia_struct_name * "_index")
+    new_fn = Symbol(julia_struct_name * "_newindex")
 
     method_entries = Expr[]
     push!(method_entries, :(LuaNova.create_register("__gc", @cfunction($(gc_fn), Cint, (Ptr{LuaNova.C.lua_State},)))))
