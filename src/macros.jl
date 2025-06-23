@@ -1,4 +1,4 @@
-macro define_lua_function(function_name)
+macro define_lua_function(function_name::Symbol)
     return esc(quote
         function $function_name(L::Ptr{Cvoid})::Cint
             args = LuaNova.from_lua(L)
@@ -16,7 +16,7 @@ macro define_lua_function(function_name)
     end)
 end
 
-macro define_lua_struct(struct_name)
+macro define_lua_struct(struct_name::Symbol)
     struct_string = string(struct_name)
     index_function = Symbol(struct_string * "_index")
     new_index_function = Symbol(struct_string * "_newindex")
@@ -44,7 +44,7 @@ macro define_lua_struct(struct_name)
     end)
 end
 
-macro push_lua_function(L, lua_function, julia_function)
+macro push_lua_function(L, lua_function::String, julia_function::Symbol)
     return esc(quote
         f = @cfunction($julia_function, Cint, (Ptr{Cvoid},))
         LuaNova.push_cfunction($L, f)
@@ -52,7 +52,7 @@ macro push_lua_function(L, lua_function, julia_function)
     end)
 end
 
-macro push_lua_struct(L, struct_name, args...)
+macro push_lua_struct(L, struct_name::Symbol, args...)
     n = length(args)
     isodd(n) && error("@push_lua_struct needs key fn pairs (got $n args)")
 
