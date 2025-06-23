@@ -84,6 +84,6 @@ macro push_lua_struct(L, lua_struct, julia_struct, args...)
 
         # constructor
         LuaNova.push_cfunction($L, @cfunction($julia_struct, Cint, (Ptr{LuaNova.C.lua_State},)))
-        LuaNova.set_global($L, $struct_string)
+        LuaNova.set_global($L, $lua_struct_string)
     end)
 end

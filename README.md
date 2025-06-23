@@ -86,7 +86,7 @@ end
 @define_lua_function add
 
 function to_string(r::Rectangle)
-    return "Rectangle(width=$(r.width), height=$(r.height))"
+    return "Rect(width=$(r.width), height=$(r.height))"
 end
 
 @define_lua_function to_string
@@ -95,7 +95,7 @@ L = LuaNova.new_state()
 LuaNova.open_libs(L)
 
 @push_lua_struct(
-    L, "Rectangle", Rectangle,
+    L, "Rect", Rectangle,
     "area", area,
     "scale", scale!,
     "__add", add,
@@ -104,7 +104,7 @@ LuaNova.open_libs(L)
 
 LuaNova.safe_script(
     L, """
-r = Rectangle(3.0, 4.0)
+r = Rect(3.0, 4.0)
 area = r:area()
 print(r)
 assert(area == 12.0)
@@ -118,8 +118,8 @@ assert(area == 48.0)
 
 LuaNova.safe_script(
     L, """
-r1 = Rectangle(1.0, 2.0)
-r2 = Rectangle(3.0, 4.0)
+r1 = Rect(1.0, 2.0)
+r2 = Rect(3.0, 4.0)
 r3 = r1 + r2
 print(r3)
 
