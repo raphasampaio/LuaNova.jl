@@ -16,35 +16,35 @@ macro define_lua_function(function_name::Symbol)
     end)
 end
 
-macro define_lua_struct(struct_name::Symbol)
-    struct_string = string(struct_name)
+macro define_lua_struct(julia_struct::Symbol)
+    struct_string = string(julia_struct)
     index_function = Symbol(struct_string * "_index")
     new_index_function = Symbol(struct_string * "_newindex")
     garbage_collect_function = Symbol(struct_string * "_gc")
 
     return esc(quote
-        function $struct_name(L::Ptr{LuaNova.C.lua_State})::Cint
+        function $julia_struct(L::Ptr{LuaNova.C.lua_State})::Cint
             args = LuaNova.from_lua(L)
-            result = $struct_name(args...)
+            result = $julia_struct(args...)
             LuaNova.push_to_lua!(L, result)
             return 1
         end
 
         function $(index_function)(L::Ptr{LuaNova.C.lua_State})::Cint
-            return LuaNova.index(L, $(struct_name))
+            return LuaNova.index(L, $(julia_struct))
         end
 
         function $(new_index_function)(L::Ptr{LuaNova.C.lua_State})::Cint
-            return LuaNova.newindex(L, $(struct_name))
+            return LuaNova.newindex(L, $(julia_struct))
         end
 
         function $(garbage_collect_function)(L::Ptr{LuaNova.C.lua_State})::Cint
-            return LuaNova.garbage_collect(L, $(struct_name))
+            return LuaNova.garbage_collect(L, $(julia_struct))
         end
     end)
 end
 
-macro push_lua_function(L, lua_function::String, julia_function::Symbol)
+macro push_lua_function(L::Symbol, lua_function::String, julia_function::Symbol)
     return esc(quote
         f = @cfunction($julia_function, Cint, (Ptr{Cvoid},))
         LuaNova.push_cfunction($L, f)
@@ -52,11 +52,11 @@ macro push_lua_function(L, lua_function::String, julia_function::Symbol)
     end)
 end
 
-macro push_lua_struct(L, struct_name::Symbol, args...)
+macro push_lua_struct(L::Symbol, julia_struct::Symbol, args...)
     n = length(args)
     isodd(n) && error("@push_lua_struct needs key fn pairs (got $n args)")
 
-    struct_string = string(struct_name)
+    struct_string = string(julia_struct)
     gc_fn = Symbol(struct_string * "_gc")
     idx_fn = Symbol(struct_string * "_index")
     new_fn = Symbol(struct_string * "_newindex")
@@ -81,7 +81,7 @@ macro push_lua_struct(L, struct_name::Symbol, args...)
         LuaNova.lua_pop!($L, 1)
 
         # constructor
-        LuaNova.push_cfunction($L, @cfunction($struct_name, Cint, (Ptr{LuaNova.C.lua_State},)))
+        LuaNova.push_cfunction($L, @cfunction($julia_struct, Cint, (Ptr{LuaNova.C.lua_State},)))
         LuaNova.set_global($L, $struct_string)
     end)
 end
