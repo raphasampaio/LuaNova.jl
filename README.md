@@ -95,8 +95,7 @@ L = LuaNova.new_state()
 LuaNova.open_libs(L)
 
 @push_lua_struct(
-    L,
-    Rectangle,
+    L, "Rectangle", Rectangle,
     "area", area,
     "scale", scale!,
     "__add", add,
