@@ -11,29 +11,16 @@ mutable struct Car <: Vehicle end
 mutable struct Truck <: Vehicle end
 @define_lua_struct Truck
 
-function move(::Vehicle)
-    return "not defined"
-end
-
-function move(::Car)
-    return "defined"
-end
-
+move(::Vehicle) = "not defined"
+move(::Car) = "defined"
 @define_lua_function move
 
 @testset "Abstracts" begin
     L = LuaNova.new_state()
     LuaNova.open_libs(L)
 
-    @push_lua_struct(
-        L, Car,
-        "move", move,
-    )
-
-    @push_lua_struct(
-        L, Truck,
-        "move", move,
-    )
+    @push_lua_struct(L, Car, "move", move)
+    @push_lua_struct(L, Truck, "move", move)
 
     LuaNova.safe_script(L, "c = Car()")
     LuaNova.safe_script(L, "return c:move()")
