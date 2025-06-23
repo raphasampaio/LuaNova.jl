@@ -44,7 +44,7 @@ macro define_lua_struct(struct_name)
     end)
 end
 
-macro push_lua_function(L, lua_function, julia_function)
+macro push_lua_function(L, lua_function::String, julia_function)
     return esc(quote
         f = @cfunction($julia_function, Cint, (Ptr{Cvoid},))
         LuaNova.push_cfunction($L, f)
@@ -52,14 +52,14 @@ macro push_lua_function(L, lua_function, julia_function)
     end)
 end
 
-macro push_lua_struct(L, lua_struct, julia_struct, args...)
+macro push_lua_struct(L, lua_struct::String, julia_struct, args...)
     n = length(args)
     isodd(n) && error("@push_lua_struct needs key fn pairs (got $n args)")
 
-    julia_struct_name = string(julia_struct)
-    gc_fn = Symbol(julia_struct_name * "_gc")
-    idx_fn = Symbol(julia_struct_name * "_index")
-    new_fn = Symbol(julia_struct_name * "_newindex")
+    julia_struct_string = string(julia_struct)
+    gc_fn = Symbol(julia_struct_string * "_gc")
+    idx_fn = Symbol(julia_struct_string * "_index")
+    new_fn = Symbol(julia_struct_string * "_newindex")
 
     method_entries = Expr[]
     push!(method_entries, :(LuaNova.create_register("__gc", @cfunction($(gc_fn), Cint, (Ptr{LuaNova.C.lua_State},)))))
@@ -80,7 +80,6 @@ macro push_lua_struct(L, lua_struct, julia_struct, args...)
         LuaNova.set_functions($L, methods)
         LuaNova.lua_pop!($L, 1)
 
-        # constructor
         LuaNova.push_cfunction($L, @cfunction($julia_struct, Cint, (Ptr{LuaNova.C.lua_State},)))
         LuaNova.set_global($L, $lua_struct)
     end)
