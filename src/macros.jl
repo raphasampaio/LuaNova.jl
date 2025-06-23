@@ -80,7 +80,6 @@ macro push_lua_struct(L::Symbol, julia_struct::Symbol, args...)
         LuaNova.set_functions($L, methods)
         LuaNova.lua_pop!($L, 1)
 
-        # constructor
         LuaNova.push_cfunction($L, @cfunction($julia_struct, Cint, (Ptr{LuaNova.C.lua_State},)))
         LuaNova.set_global($L, $struct_string)
     end)
