@@ -38,10 +38,10 @@ LuaNova.safe_script(
     L, """
 result1 = combine(3.0, 4.0)
 assert(result1 == 7.0)
-    
+
 result2 = combine("Hello, ", "World!")
 assert(result2 == "Hello, World!")
-    """,
+""",
 )
 
 LuaNova.close(L)
