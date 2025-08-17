@@ -5,7 +5,6 @@ export Lua_jll
 
 const UINT_MAX = typemax(Int64)
 
-
 const lua_Integer = Clonglong
 
 const lua_Number = Cdouble
@@ -66,7 +65,14 @@ const lua_KContext = Cptrdiff_t
 const lua_KFunction = Ptr{Cvoid}
 
 function lua_pcallk(L, nargs, nresults, errfunc, ctx, k)
-    @ccall liblua.lua_pcallk(L::Ptr{lua_State}, nargs::Cint, nresults::Cint, errfunc::Cint, ctx::lua_KContext, k::lua_KFunction)::Cint
+    @ccall liblua.lua_pcallk(
+        L::Ptr{lua_State},
+        nargs::Cint,
+        nresults::Cint,
+        errfunc::Cint,
+        ctx::lua_KContext,
+        k::lua_KFunction,
+    )::Cint
 end
 
 function luaL_loadstring(L, s)
@@ -78,7 +84,13 @@ function lua_getfield(L, idx, k)
 end
 
 function luaL_loadbufferx(L, buff, sz, name, mode)
-    @ccall liblua.luaL_loadbufferx(L::Ptr{lua_State}, buff::Ptr{Cchar}, sz::Csize_t, name::Ptr{Cchar}, mode::Ptr{Cchar})::Cint
+    @ccall liblua.luaL_loadbufferx(
+        L::Ptr{lua_State},
+        buff::Ptr{Cchar},
+        sz::Csize_t,
+        name::Ptr{Cchar},
+        mode::Ptr{Cchar},
+    )::Cint
 end
 
 const lua_Unsigned = Culonglong
@@ -91,7 +103,12 @@ struct var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d49
     data::NTuple{1024, UInt8}
 end
 
-function Base.getproperty(x::Ptr{var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)"}, f::Symbol)
+function Base.getproperty(
+    x::Ptr{
+        var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)",
+    },
+    f::Symbol,
+)
     f === :n && return Ptr{lua_Number}(x + 0)
     f === :u && return Ptr{Cdouble}(x + 0)
     f === :s && return Ptr{Ptr{Cvoid}}(x + 0)
@@ -101,15 +118,33 @@ function Base.getproperty(x::Ptr{var"union (unnamed at C:\\Users\\rsampaio\\.jul
     return getfield(x, f)
 end
 
-function Base.getproperty(x::var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)", f::Symbol)
-    r = Ref{var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)"}(x)
-    ptr = Base.unsafe_convert(Ptr{var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)"}, r)
+function Base.getproperty(
+    x::var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)",
+    f::Symbol,
+)
+    r = Ref{
+        var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)",
+    }(
+        x,
+    )
+    ptr = Base.unsafe_convert(
+        Ptr{
+            var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)",
+        },
+        r,
+    )
     fptr = getproperty(ptr, f)
     GC.@preserve r unsafe_load(fptr)
 end
 
-function Base.setproperty!(x::Ptr{var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)"}, f::Symbol, v)
-    unsafe_store!(getproperty(x, f), v)
+function Base.setproperty!(
+    x::Ptr{
+        var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)",
+    },
+    f::Symbol,
+    v,
+)
+    return unsafe_store!(getproperty(x, f), v)
 end
 
 struct luaL_Buffer
@@ -121,7 +156,11 @@ function Base.getproperty(x::Ptr{luaL_Buffer}, f::Symbol)
     f === :size && return Ptr{Csize_t}(x + 8)
     f === :n && return Ptr{Csize_t}(x + 16)
     f === :L && return Ptr{Ptr{lua_State}}(x + 24)
-    f === :init && return Ptr{var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)"}(x + 32)
+    f === :init && return Ptr{
+        var"union (unnamed at C:\\Users\\rsampaio\\.julia\\artifacts\\38e43295d4913c3d9e6b8baf05f545a89880759c\\include\\lauxlib.h:196:3)",
+    }(
+        x + 32,
+    )
     return getfield(x, f)
 end
 
@@ -133,7 +172,7 @@ function Base.getproperty(x::luaL_Buffer, f::Symbol)
 end
 
 function Base.setproperty!(x::Ptr{luaL_Buffer}, f::Symbol, v)
-    unsafe_store!(getproperty(x, f), v)
+    return unsafe_store!(getproperty(x, f), v)
 end
 
 function luaL_prepbuffsize(B, sz)
@@ -559,7 +598,13 @@ function lua_setmetatable(L, objindex)
 end
 
 function lua_load(L, reader, dt, chunkname, mode)
-    @ccall liblua.lua_load(L::Ptr{lua_State}, reader::lua_Reader, dt::Ptr{Cvoid}, chunkname::Ptr{Cchar}, mode::Ptr{Cchar})::Cint
+    @ccall liblua.lua_load(
+        L::Ptr{lua_State},
+        reader::lua_Reader,
+        dt::Ptr{Cvoid},
+        chunkname::Ptr{Cchar},
+        mode::Ptr{Cchar},
+    )::Cint
 end
 
 function lua_dump(L, writer, data, strip)
@@ -1002,6 +1047,5 @@ end
 #define lua_replace(L,idx)	(lua_copy(L, -1, (idx)), lua_pop(L, 1))
 
 luaL_getmetatable(L, n) = lua_getfield(L, LUA_REGISTRYINDEX, (n))
-
 
 end # module
