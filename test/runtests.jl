@@ -14,6 +14,6 @@ function recursive_include(path::String)
     end
 end
 
-@testset verbose = true "LuaNova" begin
+@testset verbose = true failfast = true "LuaNova" begin
     recursive_include(@__DIR__)
 end
