@@ -28,12 +28,25 @@ function from_lua(L::LuaState)
         elseif type_code == C.LUA_TNIL
             args[i] = nothing
         elseif type_code == C.LUA_TUSERDATA
-            C.lua_getmetatable(L, i)
-            C.lua_pushstring(L, Base.unsafe_convert(Ptr{Cchar}, pointer("__name")))
-            C.lua_rawget(L, -2)
-            name = unsafe_string(C.lua_tostring(L, -1))
-            C.lua_pop(L, 2)
-            args[i] = get_reference(L, i, name)
+            if C.lua_getmetatable(L, i) != 0  # Check if metatable exists
+                C.lua_pushstring(L, Base.unsafe_convert(Ptr{Cchar}, pointer("__name")))
+                if C.lua_rawget(L, -2) != C.LUA_TNIL  # Check if __name exists
+                    name_ptr = C.lua_tostring(L, -1)
+                    if name_ptr != C_NULL  # Check if string is not NULL
+                        name = unsafe_string(name_ptr)
+                        C.lua_pop(L, 2)
+                        args[i] = get_reference(L, i, name)
+                    else
+                        C.lua_pop(L, 2)
+                        error("Userdata metatable __name is NULL")
+                    end
+                else
+                    C.lua_pop(L, 2)
+                    error("Userdata metatable missing __name field")
+                end
+            else
+                error("Userdata has no metatable")
+            end
         else
             error("Unsupported Lua type: ", type_name)
         end
