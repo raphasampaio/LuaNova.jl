@@ -152,15 +152,6 @@ function set_functions(L::LuaState, methods::Vector{C.luaL_Reg})
     return nothing
 end
 
-function _register_dict_functions!(methods::Vector{C.luaL_Reg}, dict::Dict)
-    for (key, fn) in dict
-        # Generate @cfunction call at runtime using eval
-        c_fn_ptr = eval(:(@cfunction($fn, Cint, (Ptr{Cvoid},))))
-        push!(methods, create_register(key, c_fn_ptr))
-    end
-    return nothing
-end
-
 function lua_pop!(L::LuaState, n::Integer)
     C.lua_pop(L, n)
     return nothing
