@@ -4,13 +4,17 @@ export
     from_lua,
     to_cstring,
     @define_lua_function,
-    @push_lua_function,
     @define_lua_struct,
+    @define_lua_enumx,
+    @push_lua_function,
     @push_lua_struct,
+    @push_lua_enumx,
     LuaError
 
 include("capi.jl")
 import .C
+
+using EnumX
 
 const LuaState = Union{Ptr{C.lua_State}, Ptr{Nothing}}
 

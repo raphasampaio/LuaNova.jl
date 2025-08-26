@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(julia:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(powershell:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
