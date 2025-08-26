@@ -52,10 +52,7 @@ macro push_lua_function(L::Symbol, lua_function::String, julia_function::Symbol)
     end)
 end
 
-macro push_lua_struct(L::Symbol, julia_struct::Symbol, args...)
-    n = length(args)
-    isodd(n) && error("@push_lua_struct needs key fn pairs (got $n args)")
-
+macro push_lua_struct(L::Symbol, julia_struct::Symbol, pairs::Expr)
     struct_string = string(julia_struct)
     gc_fn = Symbol(struct_string * "_gc")
     idx_fn = Symbol(struct_string * "_index")
@@ -72,10 +69,15 @@ macro push_lua_struct(L::Symbol, julia_struct::Symbol, args...)
         :(LuaNova.create_register("__newindex", @cfunction($(new_fn), Cint, (Ptr{LuaNova.C.lua_State},)))),
     )
 
-    for i in 1:2:n
-        key = args[i]
-        fn = args[i+1]
-        push!(method_entries, :(LuaNova.create_register($key, @cfunction($fn, Cint, (Ptr{Cvoid},)))))
+    # Handle Vector of Pairs
+    for pair_expr in pairs.args
+        if pair_expr isa Expr && pair_expr.head == :call && pair_expr.args[1] == :(=>)
+            key = pair_expr.args[2]
+            fn = pair_expr.args[3]
+            push!(method_entries, :(LuaNova.create_register($key, @cfunction($fn, Cint, (Ptr{Cvoid},)))))
+        else
+            error("@push_lua_struct expects a Vector of Pairs in the form [\"key\" => function, ...]")
+        end
     end
     push!(method_entries, :(LuaNova.create_null_register()))
     methods_vect = Expr(:vect, method_entries...)
