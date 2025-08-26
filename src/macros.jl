@@ -52,46 +52,26 @@ macro push_lua_function(L::Symbol, lua_function::String, julia_function::Symbol)
     end)
 end
 
-macro push_lua_struct(L::Symbol, julia_struct::Symbol, dict_expression::Expr)
+macro push_lua_struct(L::Symbol, julia_struct::Symbol, dict_expression)
     struct_string = string(julia_struct)
     gc_fn = Symbol(struct_string * "_gc")
     idx_fn = Symbol(struct_string * "_index")
     new_fn = Symbol(struct_string * "_newindex")
 
-    method_entries = Expr[]
-    push!(method_entries, :(LuaNova.create_register("__gc", @cfunction($(gc_fn), Cint, (Ptr{LuaNova.C.lua_State},)))))
-    push!(
-        method_entries,
-        :(LuaNova.create_register("__index", @cfunction($(idx_fn), Cint, (Ptr{LuaNova.C.lua_State},)))),
-    )
-    push!(
-        method_entries,
-        :(LuaNova.create_register("__newindex", @cfunction($(new_fn), Cint, (Ptr{LuaNova.C.lua_State},)))),
-    )
-
-    # Handle Dict expression
-    if dict_expression.head == :call && dict_expression.args[1] == :Dict
-        # Process Dict constructor arguments
-        for i in 2:length(dict_expression.args)
-            pair_expr = dict_expression.args[i]
-            if pair_expr isa Expr && pair_expr.head == :call && pair_expr.args[1] == :(=>)
-                key = pair_expr.args[2]
-                fn = pair_expr.args[3]
-                push!(method_entries, :(LuaNova.create_register($key, @cfunction($fn, Cint, (Ptr{Cvoid},)))))
-            else
-                error("@push_lua_struct expects a Dict with pairs in the form Dict(\"key\" => function, ...)")
-            end
-        end
-    else
-        error("@push_lua_struct expects a Dict with pairs in the form Dict(\"key\" => function, ...)")
-    end
-
-    push!(method_entries, :(LuaNova.create_null_register()))
-    methods_vect = Expr(:vect, method_entries...)
-
     return esc(quote
         LuaNova.new_metatable($L, $(struct_string))
-        local methods = $methods_vect
+        
+        local methods = [
+            LuaNova.create_register("__gc", @cfunction($(gc_fn), Cint, (Ptr{LuaNova.C.lua_State},))),
+            LuaNova.create_register("__index", @cfunction($(idx_fn), Cint, (Ptr{LuaNova.C.lua_State},))),
+            LuaNova.create_register("__newindex", @cfunction($(new_fn), Cint, (Ptr{LuaNova.C.lua_State},)))
+        ]
+        
+        # Handle both Dict(...) and dict variables uniformly at runtime
+        LuaNova._register_dict_functions!(methods, $dict_expression)
+        
+        push!(methods, LuaNova.create_null_register())
+        
         LuaNova.set_functions($L, methods)
         LuaNova.lua_pop!($L, 1)
 
