@@ -44,7 +44,7 @@ end
 
     @push_lua_enumx(L, Color)
     @push_lua_function(L, "color_name", color_name)
-    
+
     @push_lua_enumx(L, Direction)
     @push_lua_function(L, "direction_name", direction_name)
 
@@ -79,7 +79,7 @@ west_name = direction_name(west)
 
     LuaNova.get_global(L, "blue_color")
     @test LuaNova.to_userdata(L, -1, Color.T) == Color.Blue
-    
+
     LuaNova.get_global(L, "red_name")
     @test LuaNova.to_string(L, -1) == "red"
 
