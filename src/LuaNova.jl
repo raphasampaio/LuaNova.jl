@@ -8,6 +8,7 @@ export
     @define_lua_enumx,    
     @push_lua_function,
     @push_lua_struct,
+    @push_lua_enumx,
     LuaError
 
 include("capi.jl")

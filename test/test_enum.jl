@@ -7,18 +7,15 @@ using Test
 @enumx Color Red Green Blue
 @define_lua_enumx Color
 
-create_color() = Color.Red
-@define_lua_function create_color
-
-function color_name(color::Any)
+function color_name(color::Color.T)
     if color == Color.Red
         return "red"
-    elseif color == Color.Green  
+    elseif color == Color.Green
         return "green"
     elseif color == Color.Blue
         return "blue"
     else
-        return "unknown"
+        error("Unknown color")
     end
 end
 @define_lua_function color_name
@@ -26,57 +23,68 @@ end
 @testset "Enum" begin
     L = LuaNova.new_state()
     LuaNova.open_libs(L)
-    
-    # Register the enum metatable using the generated function
-    register_Color_metatable(L)
-    
-    # Register Lua functions
-    @push_lua_function(L, "create_color", create_color)
+
+    @push_lua_enumx(L, Color)
     @push_lua_function(L, "color_name", color_name)
-    
-    # Test creating and using enum values in Lua
+
     LuaNova.safe_script(
         L,
         """
-        color = create_color()
-        print(color)
-        name = color_name(color)
-        assert(name == "red")
-        """
+red_color = Color.Red
+green_color = Color.Green
+blue_color = Color.Blue
+        
+-- Test them
+red_name = color_name(red_color)
+green_name = color_name(green_color)
+blue_name = color_name(blue_color)
+        
+print("Red: " .. red_name)
+print("Green: " .. green_name) 
+print("Blue: " .. blue_name)
+        
+assert(red_name == "red")
+assert(green_name == "green")
+assert(blue_name == "blue")
+        
+print("Color.Red works!")
+""",
     )
-    
+
     LuaNova.close(L)
 end
 
-# Test another enum to ensure the macro works for multiple enums
 @enumx Direction North South East West
 @define_lua_enumx Direction
 
-create_direction() = Direction.North
-@define_lua_function create_direction
-
-@testset "Multiple Enum Test" begin 
+@testset "Multiple Enum" begin
     L = LuaNova.new_state()
     LuaNova.open_libs(L)
-    
-    # Register both enum metatables
-    register_Color_metatable(L)
-    register_Direction_metatable(L)
-    
-    @push_lua_function(L, "create_color", create_color)
-    @push_lua_function(L, "create_direction", create_direction)
-    
+
+    @push_lua_enumx(L, Color)
+    @push_lua_enumx(L, Direction)
+
     LuaNova.safe_script(
         L,
         """
-        color = create_color()
-        direction = create_direction()  
-        -- Both should be userdata objects
-        assert(type(color) == "userdata")
-        assert(type(direction) == "userdata")
-        """
+red = Color.Red
+green = Color.Green
+north = Direction.North
+south = Direction.South
+east = Direction.East
+        
+-- All should be userdata objects
+assert(type(red) == "userdata")
+assert(type(green) == "userdata")
+assert(type(north) == "userdata") 
+assert(type(south) == "userdata")
+assert(type(east) == "userdata")
+        
+print("Multiple enums with dot notation work!")
+print("Color.Red and Direction.North available!")
+""",
     )
-    
+
     LuaNova.close(L)
 end
 

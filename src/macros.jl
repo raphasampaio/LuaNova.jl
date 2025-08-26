@@ -113,3 +113,29 @@ macro define_lua_enumx(enum_name::Symbol)
         end
     end)
 end
+
+macro push_lua_enumx(L::Symbol, enum_name::Symbol)
+    enum_string = string(enum_name)
+    register_function = Symbol("register_", enum_name, "_metatable")
+    
+    return esc(quote
+        # Register the metatable first
+        $register_function($L)
+        
+        # Create a table for the enum
+        LuaNova.new_table($L)
+        
+        # Push all enum values to the table
+        for instance in instances($enum_name.T)
+            value_name = string(instance)
+            # Remove the module prefix (e.g., "Main.Color.Red" -> "Red")
+            clean_name = split(value_name, '.')[end]
+            
+            LuaNova.push_to_lua!($L, instance)
+            LuaNova.C.lua_setfield($L, -2, LuaNova.to_cstring(clean_name))
+        end
+        
+        # Set the table as a global with the enum name
+        LuaNova.set_global($L, $enum_string)
+    end)
+end
