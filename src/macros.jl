@@ -52,7 +52,7 @@ macro push_lua_function(L::Symbol, lua_function::String, julia_function::Symbol)
     end)
 end
 
-macro push_lua_struct(L::Symbol, julia_struct::Symbol, dict_expr::Expr)
+macro push_lua_struct(L::Symbol, julia_struct::Symbol, dict_expression::Expr)
     struct_string = string(julia_struct)
     gc_fn = Symbol(struct_string * "_gc")
     idx_fn = Symbol(struct_string * "_index")
@@ -70,10 +70,10 @@ macro push_lua_struct(L::Symbol, julia_struct::Symbol, dict_expr::Expr)
     )
 
     # Handle Dict expression
-    if dict_expr.head == :call && dict_expr.args[1] == :Dict
+    if dict_expression.head == :call && dict_expression.args[1] == :Dict
         # Process Dict constructor arguments
-        for i in 2:length(dict_expr.args)
-            pair_expr = dict_expr.args[i]
+        for i in 2:length(dict_expression.args)
+            pair_expr = dict_expression.args[i]
             if pair_expr isa Expr && pair_expr.head == :call && pair_expr.args[1] == :(=>)
                 key = pair_expr.args[2]
                 fn = pair_expr.args[3]
