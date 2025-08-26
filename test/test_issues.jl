@@ -27,11 +27,7 @@ using Test
 
     functions = ("function1", function1, "function2", function2, "function3", function3)
 
-    @push_lua_struct(
-        L,
-        Struct,
-        functions,
-    )
+    @push_lua_struct(L, Struct, functions...)
 
     LuaNova.close(L)
 
