@@ -38,12 +38,12 @@ end
     @push_lua_struct(
         L,
         Point,
-        [
+        Dict(
             "increase" => increase,
             "sum" => sum,
             "__tostring" => to_string,
             "__add" => add,
-        ]
+        )
     )
 
     LuaNova.safe_script(L, "p = Point(1.0, 2.0)")

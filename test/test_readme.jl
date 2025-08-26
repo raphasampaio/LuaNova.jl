@@ -58,12 +58,12 @@ LuaNova.open_libs(L)
 @push_lua_struct(
     L,
     Rectangle,
-    [
+    Dict(
         "area" => area,
         "scale" => scale!,
         "__add" => add,
         "__tostring" => to_string,
-    ]
+    )
 )
 
 LuaNova.safe_script(

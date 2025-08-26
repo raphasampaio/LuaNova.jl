@@ -19,8 +19,8 @@ move(::Car) = "defined"
     L = LuaNova.new_state()
     LuaNova.open_libs(L)
 
-    @push_lua_struct(L, Car, ["move" => move])
-    @push_lua_struct(L, Truck, ["move" => move])
+    @push_lua_struct(L, Car, Dict("move" => move))
+    @push_lua_struct(L, Truck, Dict("move" => move))
 
     LuaNova.safe_script(L, "c = Car()")
     LuaNova.safe_script(L, "return c:move()")
@@ -66,8 +66,8 @@ end
     L = LuaNova.new_state()
     LuaNova.open_libs(L)
 
-    @push_lua_struct(L, Data, ["save" => save])
-    @push_lua_struct(L, Thermal, ["load" => load])
+    @push_lua_struct(L, Data, Dict("save" => save))
+    @push_lua_struct(L, Thermal, Dict("load" => load))
 
     LuaNova.safe_script(L, "thermal = Thermal()")
     LuaNova.safe_script(L, "exp = thermal:load()")
