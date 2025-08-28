@@ -15,15 +15,16 @@ end
 
     @push_lua_function(L, "multiple_returns", multiple_returns)
 
-    LuaNova.safe_script(
-        L, """
-n, s, b = multiple_returns()
-assert(n == 1)
-assert(s == "hello")
-assert(b == true)
-return n, s, b
-""",
-    )
+    LuaNova.safe_script(L, "n, s, b = multiple_returns()")
+
+    LuaNova.safe_script(L, "return n")
+    @test LuaNova.to_number(L, -1) == 1
+
+    LuaNova.safe_script(L, "return s")
+    @test LuaNova.to_string(L, -1) == "hello"
+
+    LuaNova.safe_script(L, "return b")
+    @test LuaNova.to_boolean(L, -1) == true
 
     LuaNova.close(L)
 

@@ -1,4 +1,3 @@
-# load_script?
 function safe_script(L::LuaState, s::String)
     if C.luaL_loadstring(L, s) != 0
         throw(LuaError(L))
