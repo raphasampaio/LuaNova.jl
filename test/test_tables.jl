@@ -24,34 +24,31 @@ using Test
 
     LuaNova.safe_script(L, "t = {\"a\", \"b\", \"c\"};")
     
-    # Test that the table was created successfully
     LuaNova.get_global(L, "t")
     @test LuaNova.is_table(L, -1)
     
-    # Test accessing array elements by index
     LuaNova.push_to_lua!(L, 1)
     LuaNova.get_table(L, -2)
     result1 = LuaNova.to_string(L, -1)
     @test result1 == "a"
-    LuaNova.pop(L, 1)
+    LuaNova.lua_pop!(L, 1)
     
     LuaNova.push_to_lua!(L, 2)
     LuaNova.get_table(L, -2)
     result2 = LuaNova.to_string(L, -1)
     @test result2 == "b"
-    LuaNova.pop(L, 1)
+    LuaNova.lua_pop!(L, 1)
     
     LuaNova.push_to_lua!(L, 3)
     LuaNova.get_table(L, -2)
     result3 = LuaNova.to_string(L, -1)
     @test result3 == "c"
-    LuaNova.pop(L, 1)
+    LuaNova.lua_pop!(L, 1)
     
-    # Test table length
     table_length = LuaNova.raw_len(L, -1)
     @test table_length == 3
     
-    LuaNova.pop(L, 1)  # Remove table from stack
+    LuaNova.lua_pop!(L, 1)
 
     LuaNova.close(L)    
 

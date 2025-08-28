@@ -161,3 +161,11 @@ function push_cfunction(L::LuaState, cfunction::Union{Ptr{Cvoid}, Ptr{Nothing}})
     C.lua_pushcfunction(L, cfunction)
     return nothing
 end
+
+function is_table(L::LuaState, idx::Integer)
+    return C.lua_type(L, idx) == C.LUA_TTABLE
+end
+
+function raw_len(L::LuaState, idx::Integer)
+    return C.lua_rawlen(L, idx)
+end
