@@ -9,7 +9,7 @@ end
 
 @define_lua_function multiple_returns
 
-@testset "Multiple Returns" begin
+@testset "Multiple returns" begin
     L = LuaNova.new_state()
     LuaNova.open_libs(L)
 

@@ -9,7 +9,7 @@ function mysin(L::Ptr{Cvoid})::Cint
     return 1
 end
 
-@testset "CAPI" begin
+@testset "C API" begin
     L = LuaNova.new_state()
     LuaNova.open_libs(L)
 

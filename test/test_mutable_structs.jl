@@ -31,7 +31,7 @@ function add(p1::Point, p2::Point)
 end
 @define_lua_function add
 
-@testset "Mutable Structs" begin
+@testset "Mutable structs" begin
     L = LuaNova.new_state()
     LuaNova.open_libs(L)
 

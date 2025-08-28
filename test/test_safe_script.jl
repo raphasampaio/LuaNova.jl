@@ -3,7 +3,7 @@ module TestSafeScript
 using LuaNova
 using Test
 
-@testset "Safe Script" begin
+@testset "Safe script" begin
     L = LuaNova.new_state()
     LuaNova.open_libs(L)
     LuaNova.safe_script(L, "return 42")

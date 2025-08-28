@@ -3,7 +3,7 @@ module TestErrorHandling
 using LuaNova
 using Test
 
-@testset "Error Handling" begin
+@testset "Error handling" begin
     L = LuaNova.new_state()
     LuaNova.open_libs(L)
 
