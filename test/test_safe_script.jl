@@ -22,6 +22,12 @@ using Test
     LuaNova.open_libs(L)
     @test_throws LuaError LuaNova.safe_script(L, "error('test error')")
     LuaNova.close(L)
+
+    L = LuaNova.new_state()
+    LuaNova.open_libs(L)
+    LuaNova.safe_script(L, "a = 1")
+    LuaNova.safe_script(L, "print(a)")
+    LuaNova.close(L)
 end
 
 end
