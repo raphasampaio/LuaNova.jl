@@ -1,6 +1,6 @@
 macro define_lua_function(function_name::Symbol)
     return esc(quote
-        function $function_name(L::Ptr{Cvoid})::Cint
+        function $function_name(L::LuaState)::Cint
             args = LuaNova.from_lua(L)
             result = $function_name(args...)
             if result isa Tuple
