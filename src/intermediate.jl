@@ -169,3 +169,84 @@ end
 function raw_len(L::LuaState, idx::Integer)
     return C.lua_rawlen(L, idx)
 end
+
+function lua_table_to_vector(L::LuaState, idx::Integer)
+    if !is_table(L, idx)
+        error("Value at index $idx is not a table")
+    end
+    
+    table_length = Int(raw_len(L, idx))
+    result = Vector{Any}(undef, table_length)
+    
+    for i in 1:table_length
+        push_to_lua!(L, i)
+        get_table(L, idx > 0 ? idx : idx - 1)
+        
+        type_code = C.lua_type(L, -1)
+        
+        if type_code == C.LUA_TNUMBER
+            result[i] = C.lua_tonumber(L, -1)
+        elseif type_code == C.LUA_TSTRING
+            result[i] = unsafe_string(C.lua_tostring(L, -1))
+        elseif type_code == C.LUA_TBOOLEAN
+            result[i] = C.lua_toboolean(L, -1) != 0
+        elseif type_code == C.LUA_TNIL
+            result[i] = nothing
+        elseif type_code == C.LUA_TTABLE
+            result[i] = lua_table_to_dict(L, -1)
+        else
+            type_name = unsafe_string(C.lua_typename(L, type_code))
+            result[i] = "Unsupported type: $type_name"
+        end
+        
+        lua_pop!(L, 1)
+    end
+    
+    return result
+end
+
+function lua_table_to_dict(L::LuaState, idx::Integer)
+    if !is_table(L, idx)
+        error("Value at index $idx is not a table")
+    end
+    
+    result = Dict{Any, Any}()
+    
+    C.lua_pushnil(L)
+    
+    while C.lua_next(L, idx > 0 ? idx : idx - 1) != 0
+        key_type = C.lua_type(L, -2)
+        value_type = C.lua_type(L, -1)
+        
+        key = if key_type == C.LUA_TNUMBER
+            C.lua_tonumber(L, -2)
+        elseif key_type == C.LUA_TSTRING
+            unsafe_string(C.lua_tostring(L, -2))
+        elseif key_type == C.LUA_TBOOLEAN
+            C.lua_toboolean(L, -2) != 0
+        else
+            key_type_name = unsafe_string(C.lua_typename(L, key_type))
+            "Unsupported key type: $key_type_name"
+        end
+        
+        value = if value_type == C.LUA_TNUMBER
+            C.lua_tonumber(L, -1)
+        elseif value_type == C.LUA_TSTRING
+            unsafe_string(C.lua_tostring(L, -1))
+        elseif value_type == C.LUA_TBOOLEAN
+            C.lua_toboolean(L, -1) != 0
+        elseif value_type == C.LUA_TNIL
+            nothing
+        elseif value_type == C.LUA_TTABLE
+            lua_table_to_dict(L, -1)
+        else
+            value_type_name = unsafe_string(C.lua_typename(L, value_type))
+            "Unsupported value type: $value_type_name"
+        end
+        
+        result[key] = value
+        lua_pop!(L, 1)
+    end
+    
+    return result
+end

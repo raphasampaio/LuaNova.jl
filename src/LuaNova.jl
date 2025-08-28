@@ -10,6 +10,8 @@ export
     @push_lua_function,
     @push_lua_struct,
     @push_lua_enumx,
+    lua_table_to_vector,
+    lua_table_to_dict,
     LuaState,
     LuaError
 
