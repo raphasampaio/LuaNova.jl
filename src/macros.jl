@@ -16,6 +16,25 @@ macro define_lua_function(function_name::Symbol)
     end)
 end
 
+macro define_lua_function_with_state(function_name::Symbol)
+    return esc(quote
+        function $function_name(L::Ptr{Cvoid})::Cint
+            lua_state = Ptr{LuaNova.C.lua_State}(L)
+            args = LuaNova.from_lua(lua_state)
+            result = $function_name(lua_state, args...)
+            if result isa Tuple
+                for value in result
+                    LuaNova.push_to_lua!(lua_state, value)
+                end
+                return length(result)
+            else
+                LuaNova.push_to_lua!(lua_state, result)
+                return 1
+            end
+        end
+    end)
+end
+
 macro define_lua_struct_functions(julia_struct::Symbol)
     struct_string = string(julia_struct)
     index_fn = Symbol(struct_string * "_index")
