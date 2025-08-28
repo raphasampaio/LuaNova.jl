@@ -174,16 +174,16 @@ function lua_table_to_vector(L::LuaState, idx::Integer)
     if !is_table(L, idx)
         error("Value at index $idx is not a table")
     end
-    
+
     table_length = Int(raw_len(L, idx))
     result = Vector{Any}(undef, table_length)
-    
+
     for i in 1:table_length
         push_to_lua!(L, i)
         get_table(L, idx > 0 ? idx : idx - 1)
-        
+
         type_code = C.lua_type(L, -1)
-        
+
         if type_code == C.LUA_TNUMBER
             result[i] = C.lua_tonumber(L, -1)
         elseif type_code == C.LUA_TSTRING
@@ -198,10 +198,10 @@ function lua_table_to_vector(L::LuaState, idx::Integer)
             type_name = unsafe_string(C.lua_typename(L, type_code))
             result[i] = "Unsupported type: $type_name"
         end
-        
+
         lua_pop!(L, 1)
     end
-    
+
     return result
 end
 
@@ -209,15 +209,15 @@ function lua_table_to_dict(L::LuaState, idx::Integer)
     if !is_table(L, idx)
         error("Value at index $idx is not a table")
     end
-    
+
     result = Dict{Any, Any}()
-    
+
     C.lua_pushnil(L)
-    
+
     while C.lua_next(L, idx > 0 ? idx : idx - 1) != 0
         key_type = C.lua_type(L, -2)
         value_type = C.lua_type(L, -1)
-        
+
         key = if key_type == C.LUA_TNUMBER
             C.lua_tonumber(L, -2)
         elseif key_type == C.LUA_TSTRING
@@ -228,7 +228,7 @@ function lua_table_to_dict(L::LuaState, idx::Integer)
             key_type_name = unsafe_string(C.lua_typename(L, key_type))
             "Unsupported key type: $key_type_name"
         end
-        
+
         value = if value_type == C.LUA_TNUMBER
             C.lua_tonumber(L, -1)
         elseif value_type == C.LUA_TSTRING
@@ -243,10 +243,10 @@ function lua_table_to_dict(L::LuaState, idx::Integer)
             value_type_name = unsafe_string(C.lua_typename(L, value_type))
             "Unsupported value type: $value_type_name"
         end
-        
+
         result[key] = value
         lua_pop!(L, 1)
     end
-    
+
     return result
 end
