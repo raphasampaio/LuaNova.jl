@@ -19,6 +19,13 @@ using Test
 
     LuaNova.close(L)
 
+    L = LuaNova.new_state()
+    LuaNova.open_libs(L)
+
+    LuaNova.safe_script(L, "t = {\"a\", \"b\", \"c\"};")
+
+    LuaNova.close(L)    
+
     return nothing
 end
 
