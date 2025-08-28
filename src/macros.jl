@@ -1,36 +1,38 @@
+function get_lua_function_body(L, call_expr)
+    return quote
+        args = LuaNova.from_lua($L)
+        result = $call_expr
+        if result isa Tuple
+            for value in result
+                LuaNova.push_to_lua!($L, value)
+            end
+            return length(result)
+        else
+            LuaNova.push_to_lua!($L, result)
+            return 1
+        end
+    end
+end
+
 macro define_lua_function(function_name::Symbol)
+    call_expr = :($function_name(args...))
+    body = get_lua_function_body(:L, call_expr)
+    
     return esc(quote
         function $function_name(L::LuaState)::Cint
-            args = LuaNova.from_lua(L)
-            result = $function_name(args...)
-            if result isa Tuple
-                for value in result
-                    LuaNova.push_to_lua!(L, value)
-                end
-                return length(result)
-            else
-                LuaNova.push_to_lua!(L, result)
-                return 1
-            end
+            $body
         end
     end)
 end
 
 macro define_lua_function_with_state(function_name::Symbol)
+    call_expr = :($function_name(lua_state, args...))
+    body = get_lua_function_body(:lua_state, call_expr)
+    
     return esc(quote
         function $function_name(L::Ptr{Cvoid})::Cint
             lua_state = Ptr{LuaNova.C.lua_State}(L)
-            args = LuaNova.from_lua(lua_state)
-            result = $function_name(lua_state, args...)
-            if result isa Tuple
-                for value in result
-                    LuaNova.push_to_lua!(lua_state, value)
-                end
-                return length(result)
-            else
-                LuaNova.push_to_lua!(lua_state, result)
-                return 1
-            end
+            $body
         end
     end)
 end
@@ -56,16 +58,24 @@ macro define_lua_struct_functions(julia_struct::Symbol)
     end)
 end
 
+function get_lua_struct_body(call_expr)
+    return quote
+        args = LuaNova.from_lua(L)
+        result = $call_expr
+        LuaNova.push_to_lua!(L, result)
+        return 1
+    end
+end
+
 macro define_lua_struct(julia_struct::Symbol)
     struct_string = string(julia_struct)
     new_fn = Symbol(struct_string * "_new")
+    call_expr = :($julia_struct(args...))
+    body = get_lua_struct_body(call_expr)
 
     return esc(quote
         function $(new_fn)(L::Ptr{LuaNova.C.lua_State})::Cint
-            args = LuaNova.from_lua(L)
-            result = $julia_struct(args...)
-            LuaNova.push_to_lua!(L, result)
-            return 1
+            $body
         end
 
         LuaNova.@define_lua_struct_functions $julia_struct
@@ -75,13 +85,12 @@ end
 macro define_lua_struct_with_state(julia_struct::Symbol)
     struct_string = string(julia_struct)
     new_fn = Symbol(struct_string * "_new")
+    call_expr = :($julia_struct(L, args...))
+    body = get_lua_struct_body(call_expr)
 
     return esc(quote
         function $(new_fn)(L::Ptr{LuaNova.C.lua_State})::Cint
-            args = LuaNova.from_lua(L)
-            result = $julia_struct(L, args...)
-            LuaNova.push_to_lua!(L, result)
-            return 1
+            $body
         end
 
         LuaNova.@define_lua_struct_functions $julia_struct
