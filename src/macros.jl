@@ -16,20 +16,13 @@ macro define_lua_function(function_name::Symbol)
     end)
 end
 
-macro define_lua_struct(julia_struct::Symbol)
+macro define_lua_struct_functions(julia_struct::Symbol)
     struct_string = string(julia_struct)
     index_function = Symbol(struct_string * "_index")
     new_index_function = Symbol(struct_string * "_newindex")
     garbage_collect_function = Symbol(struct_string * "_gc")
 
     return esc(quote
-        function $julia_struct(L::Ptr{LuaNova.C.lua_State})::Cint
-            args = LuaNova.from_lua(L)
-            result = $julia_struct(args...)
-            LuaNova.push_to_lua!(L, result)
-            return 1
-        end
-
         function $(index_function)(L::Ptr{LuaNova.C.lua_State})::Cint
             return LuaNova.index(L, $(julia_struct))
         end
@@ -41,6 +34,19 @@ macro define_lua_struct(julia_struct::Symbol)
         function $(garbage_collect_function)(L::Ptr{LuaNova.C.lua_State})::Cint
             return LuaNova.garbage_collect(L, $(julia_struct))
         end
+    end)
+end
+
+macro define_lua_struct(julia_struct::Symbol)
+    return esc(quote
+        function $julia_struct(L::Ptr{LuaNova.C.lua_State})::Cint
+            args = LuaNova.from_lua(L)
+            result = $julia_struct(args...)
+            LuaNova.push_to_lua!(L, result)
+            return 1
+        end
+
+        LuaNova.@define_lua_struct_functions $julia_struct
     end)
 end
 
