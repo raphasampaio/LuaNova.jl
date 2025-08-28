@@ -8,8 +8,7 @@ mutable struct Point
     y::Float64
 
     function Point(L::LuaState, x::Float64, y::Float64)
-        @show L
-        @show typeof(L)
+        @test typeof(L) == Ptr{LuaNova.C.lua_State}
         return new(x, y)
     end
 end
