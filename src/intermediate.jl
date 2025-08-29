@@ -257,4 +257,3 @@ function requiref(L::LuaState, modname::String, openf::C.lua_CFunction, glb::Int
     C.luaL_requiref(L, modname, openf, glb)
     return nothing
 end
-

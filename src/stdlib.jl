@@ -9,7 +9,7 @@ function open_string_lib(L::LuaState)
     C.lua_setglobal(L, C.LUA_STRLIBNAME)
     return nothing
 end
-   
+
 function open_table_lib(L::LuaState)
     C.luaopen_table(L)
     C.lua_setglobal(L, C.LUA_TABLIBNAME)
