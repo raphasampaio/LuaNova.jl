@@ -1,6 +1,8 @@
 macro define_lua_function(julia_function::Symbol)
+    @show bind_fn = Symbol(julia_function, "_lua")
+
     return esc(quote
-        function $julia_function(L::LuaState)::Cint
+        function $bind_fn(L::LuaState)::Cint
             args = LuaNova.from_lua(L)
             result = $julia_function(args...)
             if result isa Tuple
@@ -67,9 +69,10 @@ macro define_lua_struct_with_state(julia_struct::Symbol)
 end
 
 macro push_lua_function(L::Symbol, lua_function::String, julia_function::Symbol)
+    @show bind_fn = Symbol(julia_function, "_lua")
+
     return esc(quote
-        f = @cfunction($julia_function, Cint, (Ptr{Cvoid},))
-        LuaNova.push_cfunction($L, f)
+        LuaNova.push_cfunction($L, @cfunction($bind_fn, Cint, (Ptr{Cvoid},)))
         LuaNova.set_global($L, $lua_function)
     end)
 end
