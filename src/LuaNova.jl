@@ -15,7 +15,7 @@ export
     LuaState,
     LuaError
 
-include("capi.jl")
+include("c_api.jl")
 import .C
 
 using EnumX
