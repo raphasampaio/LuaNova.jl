@@ -24,6 +24,26 @@ macro define_lua_function(julia_function::Symbol)
     end)
 end
 
+macro define_lua_function_with_state(julia_function::Symbol)
+    binding_function = build_binding_function(julia_function)
+
+    return esc(quote
+        function $binding_function(L::LuaState)::Cint
+            args = LuaNova.from_lua(L)
+            result = $julia_function(L, args...)
+            if result isa Tuple
+                for value in result
+                    LuaNova.push_to_lua!(L, value)
+                end
+                return length(result)
+            else
+                LuaNova.push_to_lua!(L, result)
+                return 1
+            end
+        end
+    end)
+end
+
 macro define_lua_struct_functions(julia_struct::Symbol)
     binding_index = build_binding_index(julia_struct)
     binding_new_index = build_binding_new_index(julia_struct)
