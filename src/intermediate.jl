@@ -253,8 +253,8 @@ function lua_table_to_dict(L::LuaState, idx::Integer)
     return result
 end
 
-function requiref(L::LuaState, modname, openf, glb)
-    C.luaL_requiref(L, modname, openf, glb);
+function requiref(L::LuaState, modname::String, openf::C.lua_CFunction, glb::Integer)
+    C.luaL_requiref(L, modname, openf, glb)
     return nothing
 end
 
