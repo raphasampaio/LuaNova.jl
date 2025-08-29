@@ -1,8 +1,15 @@
+build_binding_new(s::Symbol) = Symbol("luanova_", s, "_new")
+build_binding_index(s::Symbol) = Symbol("luanova_", s, "_index")
+build_binding_new_index(s::Symbol) = Symbol("luanova_", s, "_new_index")
+build_binding_gc(s::Symbol) = Symbol("luanova_", s, "_gc")
+build_binding_register_metatable(s::Symbol) = Symbol("luanova_", s, "_register_metatable")
+build_binding_function(s::Symbol) = Symbol("luanova_", s, "_function")
+
 macro define_lua_function(julia_function::Symbol)
-    @show bind_fn = Symbol(julia_function, "_lua")
+    binding = build_binding_function(julia_function)
 
     return esc(quote
-        function $bind_fn(L::LuaState)::Cint
+        function $binding(L::LuaState)::Cint
             args = LuaNova.from_lua(L)
             result = $julia_function(args...)
             if result isa Tuple
@@ -19,30 +26,30 @@ macro define_lua_function(julia_function::Symbol)
 end
 
 macro define_lua_struct_functions(julia_struct::Symbol)
-    index_fn = Symbol(julia_struct, "_index")
-    newindex_fn = Symbol(julia_struct, "_newindex")
-    gc_fn = Symbol(julia_struct, "_gc")
+    binding_index = build_binding_index(julia_struct)
+    binding_new_index = build_binding_new_index(julia_struct)
+    binding_gc = build_binding_gc(julia_struct)
 
     return esc(quote
-        function $index_fn(L::LuaState)::Cint
+        function $binding_index(L::LuaState)::Cint
             return LuaNova.index(L, $julia_struct)
         end
 
-        function $newindex_fn(L::LuaState)::Cint
+        function $binding_new_index(L::LuaState)::Cint
             return LuaNova.newindex(L, $julia_struct)
         end
 
-        function $gc_fn(L::LuaState)::Cint
+        function $binding_gc(L::LuaState)::Cint
             return LuaNova.garbage_collect(L, $julia_struct)
         end
     end)
 end
 
 macro define_lua_struct(julia_struct::Symbol)
-    new_fn = Symbol(julia_struct, "_new")
+    binding_new = build_binding_new(julia_struct)
 
     return esc(quote
-        function $new_fn(L::LuaState)::Cint
+        function $binding_new(L::LuaState)::Cint
             args = LuaNova.from_lua(L)
             result = $julia_struct(args...)
             LuaNova.push_to_lua!(L, result)
@@ -54,10 +61,10 @@ macro define_lua_struct(julia_struct::Symbol)
 end
 
 macro define_lua_struct_with_state(julia_struct::Symbol)
-    new_fn = Symbol(julia_struct, "_new")
+    binding_new = build_binding_new(julia_struct)
 
     return esc(quote
-        function $new_fn(L::LuaState)::Cint
+        function $binding_new(L::LuaState)::Cint
             args = LuaNova.from_lua(L)
             result = $julia_struct(L, args...)
             LuaNova.push_to_lua!(L, result)
@@ -69,10 +76,10 @@ macro define_lua_struct_with_state(julia_struct::Symbol)
 end
 
 macro push_lua_function(L::Symbol, lua_function::String, julia_function::Symbol)
-    @show bind_fn = Symbol(julia_function, "_lua")
+    binding = build_binding_function(julia_function)
 
     return esc(quote
-        LuaNova.push_cfunction($L, @cfunction($bind_fn, Cint, (Ptr{Cvoid},)))
+        LuaNova.push_cfunction($L, @cfunction($binding, Cint, (Ptr{Cvoid},)))
         LuaNova.set_global($L, $lua_function)
     end)
 end
@@ -82,34 +89,34 @@ macro push_lua_struct(L::Symbol, julia_struct::Symbol, args...)
     isodd(n) && error("@push_lua_struct needs key fn pairs (got $n args)")
 
     julia_struct_string = string(julia_struct)
-    new_fn = Symbol(julia_struct, "_new")
-    gc_fn = Symbol(julia_struct, "_gc")
-    index_fn = Symbol(julia_struct, "_index")
-    newindex_fn = Symbol(julia_struct, "_newindex")
+    binding_new = build_binding_new(julia_struct)
+    binding_gc = build_binding_gc(julia_struct)
+    binding_index = build_binding_index(julia_struct)
+    binding_new_index = build_binding_new_index(julia_struct)
 
     method_entries = Expr[]
 
     push!(
         method_entries,
-        :(LuaNova.create_register("__gc", @cfunction($gc_fn, Cint, (Ptr{LuaNova.C.lua_State},)))),
+        :(LuaNova.create_register("__gc", @cfunction($binding_gc, Cint, (Ptr{LuaNova.C.lua_State},)))),
     )
 
     push!(
         method_entries,
-        :(LuaNova.create_register("__index", @cfunction($index_fn, Cint, (Ptr{LuaNova.C.lua_State},)))),
+        :(LuaNova.create_register("__index", @cfunction($binding_index, Cint, (Ptr{LuaNova.C.lua_State},)))),
     )
 
     push!(
         method_entries,
-        :(LuaNova.create_register("__newindex", @cfunction($newindex_fn, Cint, (Ptr{LuaNova.C.lua_State},)))),
+        :(LuaNova.create_register("__newindex", @cfunction($binding_new_index, Cint, (Ptr{LuaNova.C.lua_State},)))),
     )
 
     for i in 1:2:n
         key = args[i]
-        fn = args[i+1]
+        binding = build_binding_function(args[i+1])
         push!(
             method_entries,
-            :(LuaNova.create_register($key, @cfunction($fn, Cint, (Ptr{Cvoid},)))),
+            :(LuaNova.create_register($key, @cfunction($binding, Cint, (Ptr{Cvoid},)))),
         )
     end
 
@@ -118,25 +125,25 @@ macro push_lua_struct(L::Symbol, julia_struct::Symbol, args...)
         :(LuaNova.create_null_register()),
     )
 
-    methods_vect = Expr(:vect, method_entries...)
+    methods_vector = Expr(:vect, method_entries...)
 
     return esc(quote
         LuaNova.new_metatable($L, $julia_struct_string)
-        local methods = $methods_vect
+        local methods = $methods_vector
         LuaNova.set_functions($L, methods)
         LuaNova.lua_pop!($L, 1)
 
-        LuaNova.push_cfunction($L, @cfunction($new_fn, Cint, (Ptr{LuaNova.C.lua_State},)))
+        LuaNova.push_cfunction($L, @cfunction($binding_new, Cint, (Ptr{LuaNova.C.lua_State},)))
         LuaNova.set_global($L, $julia_struct_string)
     end)
 end
 
 macro define_lua_enumx(enum_name::Symbol)
-    register_fn = Symbol("register_", enum_name, "_metatable")
+    binding_register_metatable = build_binding_register_metatable(enum_name)
 
     return esc(quote
         # Define a helper function to register the metatable
-        function $register_fn(L::LuaState)
+        function $binding_register_metatable(L::LuaState)
             # Get the type name using LuaNova's naming convention
             # EnumX creates a type called T inside the module
             first_value = first(instances($enum_name.T))
@@ -156,11 +163,11 @@ end
 
 macro push_lua_enumx(L::Symbol, enum_name::Symbol)
     enum_string = string(enum_name)
-    register_function = Symbol("register_", enum_name, "_metatable")
+    binding_register_metatable = build_binding_register_metatable(enum_name)
 
     return esc(quote
         # Register the metatable first
-        $register_function($L)
+        $binding_register_metatable($L)
 
         # Create a table for the enum
         LuaNova.new_table($L)
