@@ -1,43 +1,74 @@
 function open_math_lib(L::LuaState)
-    return C.luaopen_math(L)
+    math_func = cglobal((:luaopen_math, C.liblua), Ptr{Cvoid})
+    C.luaL_requiref(L, C.LUA_MATHLIBNAME, math_func, 1)
+    C.lua_pop(L, 1)
+    return nothing
 end
 
 function open_string_lib(L::LuaState)
-    return C.luaopen_string(L)
+    string_func = cglobal((:luaopen_string, C.liblua), Ptr{Cvoid})
+    C.luaL_requiref(L, C.LUA_STRLIBNAME, string_func, 1)
+    C.lua_pop(L, 1)
+    return nothing
 end
 
 function open_table_lib(L::LuaState)
-    return C.luaopen_table(L)
+    table_func = cglobal((:luaopen_table, C.liblua), Ptr{Cvoid})
+    C.luaL_requiref(L, C.LUA_TABLIBNAME, table_func, 1)
+    C.lua_pop(L, 1)
+    return nothing
 end
 
 function open_io_lib(L::LuaState)
-    return C.luaopen_io(L)
+    io_func = cglobal((:luaopen_io, C.liblua), Ptr{Cvoid})
+    C.luaL_requiref(L, C.LUA_IOLIBNAME, io_func, 1)
+    C.lua_pop(L, 1)
+    return nothing
 end
 
 function open_os_lib(L::LuaState)
-    return C.luaopen_os(L)
+    os_func = cglobal((:luaopen_os, C.liblua), Ptr{Cvoid})
+    C.luaL_requiref(L, C.LUA_OSLIBNAME, os_func, 1)
+    C.lua_pop(L, 1)
+    return nothing
 end
 
 function open_utf8_lib(L::LuaState)
-    return C.luaopen_utf8(L)
+    utf8_func = cglobal((:luaopen_utf8, C.liblua), Ptr{Cvoid})
+    C.luaL_requiref(L, C.LUA_UTF8LIBNAME, utf8_func, 1)
+    C.lua_pop(L, 1)
+    return nothing
 end
 
 function open_debug_lib(L::LuaState)
-    return C.luaopen_debug(L)
+    debug_func = cglobal((:luaopen_debug, C.liblua), Ptr{Cvoid})
+    C.luaL_requiref(L, C.LUA_DBLIBNAME, debug_func, 1)
+    C.lua_pop(L, 1)
+    return nothing
 end
 
 function open_package_lib(L::LuaState)
-    return C.luaopen_package(L)
+    package_func = cglobal((:luaopen_package, C.liblua), Ptr{Cvoid})
+    C.luaL_requiref(L, C.LUA_LOADLIBNAME, package_func, 1)
+    C.lua_pop(L, 1)
+    return nothing
 end
 
 function open_coroutine_lib(L::LuaState)
-    return C.luaopen_coroutine(L)
+    coroutine_func = cglobal((:luaopen_coroutine, C.liblua), Ptr{Cvoid})
+    C.luaL_requiref(L, C.LUA_COLIBNAME, coroutine_func, 1)
+    C.lua_pop(L, 1)
+    return nothing
 end
 
 function open_base_lib(L::LuaState)
-    return C.luaopen_base(L)
+    base_func = cglobal((:luaopen_base, C.liblua), Ptr{Cvoid})
+    C.luaL_requiref(L, C.LUA_GNAME, base_func, 1)
+    C.lua_pop(L, 1)
+    return nothing
 end
 
 function open_libs(L::LuaState)
-    return C.luaL_openlibs(L)
+    C.luaL_openlibs(L)
+    return nothing
 end
