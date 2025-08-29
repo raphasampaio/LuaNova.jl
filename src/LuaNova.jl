@@ -28,5 +28,6 @@ include("intermediate.jl")
 include("state.jl")
 include("macros.jl")
 include("registry.jl")
+include("stdlib.jl")
 
 end

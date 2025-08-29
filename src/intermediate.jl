@@ -2,11 +2,6 @@ function new_state()
     return C.luaL_newstate()
 end
 
-function open_libs(L::LuaState)
-    C.luaL_openlibs(L)
-    return nothing
-end
-
 function close(L::LuaState)
     C.lua_close(L)
     return nothing
