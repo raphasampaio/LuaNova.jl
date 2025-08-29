@@ -78,38 +78,53 @@ macro push_lua_struct(L::Symbol, julia_struct::Symbol, args...)
     n = length(args)
     isodd(n) && error("@push_lua_struct needs key fn pairs (got $n args)")
 
-    struct_string = string(julia_struct)
+    julia_struct_string = string(julia_struct)
     new_fn = Symbol(julia_struct, "_new")
     gc_fn = Symbol(julia_struct, "_gc")
     index_fn = Symbol(julia_struct, "_index")
     newindex_fn = Symbol(julia_struct, "_newindex")
 
-    gc_ptr = :(LuaNova.create_register("__gc", @cfunction($(gc_fn), Cint, (Ptr{LuaNova.C.lua_State},))))
-    index_ptr = :(LuaNova.create_register("__index", @cfunction($(index_fn), Cint, (Ptr{LuaNova.C.lua_State},))))
-    newindex_ptr =
-        :(LuaNova.create_register("__newindex", @cfunction($(newindex_fn), Cint, (Ptr{LuaNova.C.lua_State},))))
-
     method_entries = Expr[]
-    push!(method_entries, gc_ptr)
-    push!(method_entries, index_ptr)
-    push!(method_entries, newindex_ptr)
+
+    push!(
+        method_entries,
+        :(LuaNova.create_register("__gc", @cfunction($(gc_fn), Cint, (Ptr{LuaNova.C.lua_State},)))),
+    )
+
+    push!(
+        method_entries,
+        :(LuaNova.create_register("__index", @cfunction($(index_fn), Cint, (Ptr{LuaNova.C.lua_State},)))),
+    )
+
+    push!(
+        method_entries,
+        :(LuaNova.create_register("__newindex", @cfunction($(newindex_fn), Cint, (Ptr{LuaNova.C.lua_State},)))),
+    )
 
     for i in 1:2:n
         key = args[i]
         fn = args[i+1]
-        push!(method_entries, :(LuaNova.create_register($key, @cfunction($fn, Cint, (Ptr{Cvoid},)))))
+        push!(
+            method_entries,
+            :(LuaNova.create_register($key, @cfunction($fn, Cint, (Ptr{Cvoid},)))),
+        )
     end
-    push!(method_entries, :(LuaNova.create_null_register()))
+
+    push!(
+        method_entries,
+        :(LuaNova.create_null_register()),
+    )
+
     methods_vect = Expr(:vect, method_entries...)
 
     return esc(quote
-        LuaNova.new_metatable($L, $(struct_string))
+        LuaNova.new_metatable($L, $julia_struct_string)
         local methods = $methods_vect
         LuaNova.set_functions($L, methods)
         LuaNova.lua_pop!($L, 1)
 
         LuaNova.push_cfunction($L, @cfunction($(new_fn), Cint, (Ptr{LuaNova.C.lua_State},)))
-        LuaNova.set_global($L, $struct_string)
+        LuaNova.set_global($L, $julia_struct_string)
     end)
 end
 
