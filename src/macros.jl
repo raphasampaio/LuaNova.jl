@@ -1,6 +1,6 @@
 build_binding_new(s::Symbol) = Symbol("luanova_", s, "_new")
 build_binding_index(s::Symbol) = Symbol("luanova_", s, "_index")
-build_binding_new_index(s::Symbol) = Symbol("luanova_", s, "_new_index")
+build_binding_new_index(s::Symbol) = Symbol("luanova_", s, "_newindex")
 build_binding_gc(s::Symbol) = Symbol("luanova_", s, "_gc")
 build_binding_function(s::Symbol) = Symbol("luanova_", s, "_function")
 
