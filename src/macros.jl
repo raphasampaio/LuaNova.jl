@@ -22,16 +22,16 @@ macro define_lua_struct_functions(julia_struct::Symbol)
     gc_fn = Symbol(julia_struct, "_gc")
 
     return esc(quote
-        function $(index_fn)(L::Ptr{LuaNova.C.lua_State})::Cint
-            return LuaNova.index(L, $(julia_struct))
+        function $index_fn(L::LuaState)::Cint
+            return LuaNova.index(L, $julia_struct)
         end
 
-        function $(newindex_fn)(L::Ptr{LuaNova.C.lua_State})::Cint
-            return LuaNova.newindex(L, $(julia_struct))
+        function $newindex_fn(L::LuaState)::Cint
+            return LuaNova.newindex(L, $julia_struct)
         end
 
-        function $(gc_fn)(L::Ptr{LuaNova.C.lua_State})::Cint
-            return LuaNova.garbage_collect(L, $(julia_struct))
+        function $gc_fn(L::LuaState)::Cint
+            return LuaNova.garbage_collect(L, $julia_struct)
         end
     end)
 end
@@ -40,7 +40,7 @@ macro define_lua_struct(julia_struct::Symbol)
     new_fn = Symbol(julia_struct, "_new")
 
     return esc(quote
-        function $(new_fn)(L::Ptr{LuaNova.C.lua_State})::Cint
+        function $new_fn(L::LuaState)::Cint
             args = LuaNova.from_lua(L)
             result = $julia_struct(args...)
             LuaNova.push_to_lua!(L, result)
@@ -55,7 +55,7 @@ macro define_lua_struct_with_state(julia_struct::Symbol)
     new_fn = Symbol(julia_struct, "_new")
 
     return esc(quote
-        function $(new_fn)(L::Ptr{LuaNova.C.lua_State})::Cint
+        function $new_fn(L::LuaState)::Cint
             args = LuaNova.from_lua(L)
             result = $julia_struct(L, args...)
             LuaNova.push_to_lua!(L, result)
@@ -88,17 +88,17 @@ macro push_lua_struct(L::Symbol, julia_struct::Symbol, args...)
 
     push!(
         method_entries,
-        :(LuaNova.create_register("__gc", @cfunction($(gc_fn), Cint, (Ptr{LuaNova.C.lua_State},)))),
+        :(LuaNova.create_register("__gc", @cfunction($gc_fn, Cint, (Ptr{LuaNova.C.lua_State},)))),
     )
 
     push!(
         method_entries,
-        :(LuaNova.create_register("__index", @cfunction($(index_fn), Cint, (Ptr{LuaNova.C.lua_State},)))),
+        :(LuaNova.create_register("__index", @cfunction($index_fn, Cint, (Ptr{LuaNova.C.lua_State},)))),
     )
 
     push!(
         method_entries,
-        :(LuaNova.create_register("__newindex", @cfunction($(newindex_fn), Cint, (Ptr{LuaNova.C.lua_State},)))),
+        :(LuaNova.create_register("__newindex", @cfunction($newindex_fn, Cint, (Ptr{LuaNova.C.lua_State},)))),
     )
 
     for i in 1:2:n
@@ -123,7 +123,7 @@ macro push_lua_struct(L::Symbol, julia_struct::Symbol, args...)
         LuaNova.set_functions($L, methods)
         LuaNova.lua_pop!($L, 1)
 
-        LuaNova.push_cfunction($L, @cfunction($(new_fn), Cint, (Ptr{LuaNova.C.lua_State},)))
+        LuaNova.push_cfunction($L, @cfunction($new_fn, Cint, (Ptr{LuaNova.C.lua_State},)))
         LuaNova.set_global($L, $julia_struct_string)
     end)
 end
