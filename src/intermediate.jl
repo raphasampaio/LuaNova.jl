@@ -33,27 +33,34 @@ end
 
 function push_to_lua!(L::LuaState, x::Real)
     C.lua_pushnumber(L, x)
-    return nothing
+    return 1
 end
 
 function push_to_lua!(L::LuaState, x::Integer)
     C.lua_pushnumber(L, x)
-    return nothing
+    return 1
 end
 
 function push_to_lua!(L::LuaState, x::String)
     C.lua_pushstring(L, x)
-    return nothing
+    return 1
 end
 
 function push_to_lua!(L::LuaState, x::Bool)
     C.lua_pushboolean(L, x)
-    return nothing
+    return 1
 end
 
 function push_to_lua!(L::LuaState, ::Nothing)
     C.lua_pushnil(L)
-    return nothing
+    return 1
+end
+
+function push_to_lua!(L::LuaState, x::Tuple)
+    for value in x
+        push_to_lua!(L, value)
+    end
+    return length(x)
 end
 
 function push_to_lua!(L::LuaState, x::T) where {T}
@@ -61,7 +68,7 @@ function push_to_lua!(L::LuaState, x::T) where {T}
     userdata = new_userdata(L, 0)
     REGISTRY[userdata] = Ref(x)
     set_metatable(L, struct_string)
-    return nothing
+    return 1
 end
 
 function get_global(L::LuaState, name::String)

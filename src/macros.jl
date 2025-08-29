@@ -11,15 +11,7 @@ macro define_lua_function(julia_function::Symbol)
         function $binding_function(L::LuaState)::Cint
             args = LuaNova.from_lua(L)
             result = $julia_function(args...)
-            if result isa Tuple
-                for value in result
-                    LuaNova.push_to_lua!(L, value)
-                end
-                return length(result)
-            else
-                LuaNova.push_to_lua!(L, result)
-                return 1
-            end
+            return LuaNova.push_to_lua!(L, result)
         end
     end)
 end
@@ -31,15 +23,7 @@ macro define_lua_function_with_state(julia_function::Symbol)
         function $binding_function(L::LuaState)::Cint
             args = LuaNova.from_lua(L)
             result = $julia_function(L, args...)
-            if result isa Tuple
-                for value in result
-                    LuaNova.push_to_lua!(L, value)
-                end
-                return length(result)
-            else
-                LuaNova.push_to_lua!(L, result)
-                return 1
-            end
+            return LuaNova.push_to_lua!(L, result)
         end
     end)
 end
