@@ -84,16 +84,15 @@ macro push_lua_struct(L::Symbol, julia_struct::Symbol, args...)
     index_fn = Symbol(julia_struct, "_index")
     newindex_fn = Symbol(julia_struct, "_newindex")
 
+    gc_ptr = :(LuaNova.create_register("__gc", @cfunction($(gc_fn), Cint, (Ptr{LuaNova.C.lua_State},))))
+    index_ptr = :(LuaNova.create_register("__index", @cfunction($(index_fn), Cint, (Ptr{LuaNova.C.lua_State},))))
+    newindex_ptr =
+        :(LuaNova.create_register("__newindex", @cfunction($(newindex_fn), Cint, (Ptr{LuaNova.C.lua_State},))))
+
     method_entries = Expr[]
-    push!(method_entries, :(LuaNova.create_register("__gc", @cfunction($(gc_fn), Cint, (Ptr{LuaNova.C.lua_State},)))))
-    push!(
-        method_entries,
-        :(LuaNova.create_register("__index", @cfunction($(index_fn), Cint, (Ptr{LuaNova.C.lua_State},)))),
-    )
-    push!(
-        method_entries,
-        :(LuaNova.create_register("__newindex", @cfunction($(newindex_fn), Cint, (Ptr{LuaNova.C.lua_State},)))),
-    )
+    push!(method_entries, gc_ptr)
+    push!(method_entries, index_ptr)
+    push!(method_entries, newindex_ptr)
 
     for i in 1:2:n
         key = args[i]
