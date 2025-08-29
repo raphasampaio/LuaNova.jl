@@ -5,7 +5,6 @@ using LuaNova
 using Test
 
 @enumx Color Red Green Blue
-@define_lua_enumx Color
 
 function color_name(color::Color.T)
     if color == Color.Red
@@ -21,7 +20,6 @@ end
 @define_lua_function color_name
 
 @enumx Direction North South East West
-@define_lua_enumx Direction
 
 function direction_name(dir::Direction.T)
     if dir == Direction.North

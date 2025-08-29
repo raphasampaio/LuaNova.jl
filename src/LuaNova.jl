@@ -6,7 +6,6 @@ export
     @define_lua_function,
     @define_lua_struct,
     @define_lua_struct_with_state,
-    @define_lua_enumx,
     @push_lua_function,
     @push_lua_struct,
     @push_lua_enumx,
