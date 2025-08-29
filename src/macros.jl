@@ -2,14 +2,13 @@ build_binding_new(s::Symbol) = Symbol("luanova_", s, "_new")
 build_binding_index(s::Symbol) = Symbol("luanova_", s, "_index")
 build_binding_new_index(s::Symbol) = Symbol("luanova_", s, "_new_index")
 build_binding_gc(s::Symbol) = Symbol("luanova_", s, "_gc")
-build_binding_register_metatable(s::Symbol) = Symbol("luanova_", s, "_register_metatable")
 build_binding_function(s::Symbol) = Symbol("luanova_", s, "_function")
 
 macro define_lua_function(julia_function::Symbol)
-    binding = build_binding_function(julia_function)
+    binding_function = build_binding_function(julia_function)
 
     return esc(quote
-        function $binding(L::LuaState)::Cint
+        function $binding_function(L::LuaState)::Cint
             args = LuaNova.from_lua(L)
             result = $julia_function(args...)
             if result isa Tuple
@@ -76,10 +75,10 @@ macro define_lua_struct_with_state(julia_struct::Symbol)
 end
 
 macro push_lua_function(L::Symbol, lua_function::String, julia_function::Symbol)
-    binding = build_binding_function(julia_function)
+    binding_function = build_binding_function(julia_function)
 
     return esc(quote
-        LuaNova.push_cfunction($L, @cfunction($binding, Cint, (Ptr{Cvoid},)))
+        LuaNova.push_cfunction($L, @cfunction($binding_function, Cint, (Ptr{Cvoid},)))
         LuaNova.set_global($L, $lua_function)
     end)
 end
@@ -113,10 +112,10 @@ macro push_lua_struct(L::Symbol, julia_struct::Symbol, args...)
 
     for i in 1:2:n
         key = args[i]
-        binding = build_binding_function(args[i+1])
+        binding_function = build_binding_function(args[i+1])
         push!(
             method_entries,
-            :(LuaNova.create_register($key, @cfunction($binding, Cint, (Ptr{Cvoid},)))),
+            :(LuaNova.create_register($key, @cfunction($binding_function, Cint, (Ptr{Cvoid},)))),
         )
     end
 
@@ -138,42 +137,27 @@ macro push_lua_struct(L::Symbol, julia_struct::Symbol, args...)
     end)
 end
 
-macro define_lua_enumx(enum_name::Symbol)
-    binding_register_metatable = build_binding_register_metatable(enum_name)
+macro push_lua_enumx(L::Symbol, enum::Symbol)
+    enum_string = string(enum)
 
     return esc(quote
-        # Define a helper function to register the metatable
-        function $binding_register_metatable(L::LuaState)
-            # Get the type name using LuaNova's naming convention
-            # EnumX creates a type called T inside the module
-            first_value = first(instances($enum_name.T))
-            type_name = LuaNova.to_string(typeof(first_value))
+        # Get the type name using LuaNova's naming convention
+        # EnumX creates a type called T inside the module
+        first_value = first(instances($enum.T))
+        type_name = LuaNova.to_string(typeof(first_value))
 
-            # Create metatable with __name field
-            LuaNova.new_metatable(L, type_name)
-            LuaNova.C.lua_pushstring(L, LuaNova.to_cstring("__name"))
-            LuaNova.C.lua_pushstring(L, LuaNova.to_cstring(type_name))
-            LuaNova.C.lua_rawset(L, -3)
-            LuaNova.C.lua_pop(L, 1)
-
-            return nothing
-        end
-    end)
-end
-
-macro push_lua_enumx(L::Symbol, enum_name::Symbol)
-    enum_string = string(enum_name)
-    binding_register_metatable = build_binding_register_metatable(enum_name)
-
-    return esc(quote
-        # Register the metatable first
-        $binding_register_metatable($L)
+        # Create metatable with __name field
+        LuaNova.new_metatable(L, type_name)
+        LuaNova.C.lua_pushstring(L, LuaNova.to_cstring("__name"))
+        LuaNova.C.lua_pushstring(L, LuaNova.to_cstring(type_name))
+        LuaNova.C.lua_rawset(L, -3)
+        LuaNova.C.lua_pop(L, 1)
 
         # Create a table for the enum
         LuaNova.new_table($L)
 
         # Push all enum values to the table
-        for instance in instances($enum_name.T)
+        for instance in instances($enum.T)
             value_name = string(instance)
             # Remove the module prefix (e.g., "Main.Color.Red" -> "Red")
             clean_name = split(value_name, '.')[end]
