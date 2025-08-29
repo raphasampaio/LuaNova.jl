@@ -67,7 +67,7 @@
 
 #     # Clear stack from previous tests
 #     LuaNova.C.lua_settop(L, 0)
-    
+
 #     # Test multiple return values with state
 #     @push_lua_function(L, "state_multiple", state_aware_multiple_returns)
 #     LuaNova.get_global(L, "state_multiple")
