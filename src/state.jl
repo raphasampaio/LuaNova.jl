@@ -11,7 +11,7 @@ function safe_script(L::LuaState, s::String)
 end
 
 function from_lua(L::LuaState)
-    num_args = C.lua_gettop(L)
+    num_args = get_top(L)
 
     args = Vector{Any}(undef, num_args)
     for i in 1:num_args
@@ -19,11 +19,11 @@ function from_lua(L::LuaState)
         type_name = unsafe_string(C.lua_typename(L, type_code))
 
         if type_code == C.LUA_TNUMBER
-            args[i] = C.lua_tonumber(L, i)
+            args[i] = to_number(L, i)
         elseif type_code == C.LUA_TSTRING
-            args[i] = unsafe_string(C.lua_tostring(L, i))
+            args[i] = to_string(L, i)
         elseif type_code == C.LUA_TBOOLEAN
-            args[i] = C.lua_toboolean(L, i) != 0
+            args[i] = to_boolean(L, i)
         elseif type_code == C.LUA_TNIL
             args[i] = nothing
         elseif type_code == C.LUA_TUSERDATA

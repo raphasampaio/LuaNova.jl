@@ -66,7 +66,7 @@ end
     @test result == false
 
     # Clear stack from previous tests
-    LuaNova.C.lua_settop(L, 0)
+    LuaNova.set_top(L, 0)
 
     # Test multiple return values with state
     @push_lua_function(L, "state_multiple", state_aware_multiple_returns)
@@ -74,7 +74,7 @@ end
     LuaNova.push_to_lua!(L, 2.0)
     LuaNova.protected_call(L, 1)
     # Should return 3 values: 2.0, 4.0, 8.0
-    @test LuaNova.C.lua_gettop(L) == 3
+    @test LuaNova.get_top(L) == 3
     result1 = LuaNova.to_number(L, -3)
     result2 = LuaNova.to_number(L, -2)
     result3 = LuaNova.to_number(L, -1)

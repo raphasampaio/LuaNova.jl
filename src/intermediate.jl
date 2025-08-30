@@ -257,3 +257,12 @@ function requiref(L::LuaState, modname::String, openf::C.lua_CFunction, glb::Int
     C.luaL_requiref(L, modname, openf, glb)
     return nothing
 end
+
+function get_top(L::LuaState)
+    return C.lua_gettop(L)
+end
+
+function set_top(L::LuaState, idx::Integer)
+    C.lua_settop(L, idx)
+    return nothing
+end
