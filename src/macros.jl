@@ -8,10 +8,12 @@ macro define_lua_function(julia_function::Symbol)
     binding_function = build_binding_function(julia_function)
 
     return esc(quote
-        function $binding_function(L::LuaState)::Cint
-            args = LuaNova.from_lua(L)
-            result = $julia_function(args...)
-            return LuaNova.push_to_lua!(L, result)
+        if !@isdefined($binding_function)
+            function $binding_function(L::LuaState)::Cint
+                args = LuaNova.from_lua(L)
+                result = $julia_function(args...)
+                return LuaNova.push_to_lua!(L, result)
+            end
         end
     end)
 end
