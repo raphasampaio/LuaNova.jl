@@ -11,31 +11,31 @@ macro define_lua_function(julia_function::Symbol)
         if !@isdefined($binding_function)
             function $binding_function(L::LuaState)::Cint
                 args = LuaNova.from_lua(L)
-                result = $julia_function(args...)
+                result = $julia_function(L, args...)
                 return LuaNova.push_to_lua!(L, result)
             end
+
+            $julia_function(::LuaState, args...) = $julia_function(args...)
         end
     end)
 end
 
-macro define_lua_function_with_state(julia_function::Symbol)
-    binding_function = build_binding_function(julia_function)
-
-    return esc(quote
-        function $binding_function(L::LuaState)::Cint
-            args = LuaNova.from_lua(L)
-            result = $julia_function(L, args...)
-            return LuaNova.push_to_lua!(L, result)
-        end
-    end)
-end
-
-macro define_lua_struct_functions(julia_struct::Symbol)
+macro define_lua_struct(julia_struct::Symbol)
+    binding_new = build_binding_new(julia_struct)
     binding_index = build_binding_index(julia_struct)
     binding_new_index = build_binding_new_index(julia_struct)
     binding_gc = build_binding_gc(julia_struct)
 
     return esc(quote
+        function $binding_new(L::LuaState)::Cint
+            args = LuaNova.from_lua(L)
+            result = $julia_struct(L, args...)
+            LuaNova.push_to_lua!(L, result)
+            return 1
+        end
+
+        $julia_struct(::LuaState, args...) = $julia_struct(args...)
+
         function $binding_index(L::LuaState)::Cint
             return LuaNova.index(L, $julia_struct)
         end
@@ -47,36 +47,6 @@ macro define_lua_struct_functions(julia_struct::Symbol)
         function $binding_gc(L::LuaState)::Cint
             return LuaNova.garbage_collect(L, $julia_struct)
         end
-    end)
-end
-
-macro define_lua_struct(julia_struct::Symbol)
-    binding_new = build_binding_new(julia_struct)
-
-    return esc(quote
-        function $binding_new(L::LuaState)::Cint
-            args = LuaNova.from_lua(L)
-            result = $julia_struct(args...)
-            LuaNova.push_to_lua!(L, result)
-            return 1
-        end
-
-        LuaNova.@define_lua_struct_functions $julia_struct
-    end)
-end
-
-macro define_lua_struct_with_state(julia_struct::Symbol)
-    binding_new = build_binding_new(julia_struct)
-
-    return esc(quote
-        function $binding_new(L::LuaState)::Cint
-            args = LuaNova.from_lua(L)
-            result = $julia_struct(L, args...)
-            LuaNova.push_to_lua!(L, result)
-            return 1
-        end
-
-        LuaNova.@define_lua_struct_functions $julia_struct
     end)
 end
 
