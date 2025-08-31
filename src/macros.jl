@@ -20,28 +20,11 @@ macro define_lua_function(julia_function::Symbol)
     end)
 end
 
-macro define_lua_struct_functions(julia_struct::Symbol)
+macro define_lua_struct(julia_struct::Symbol)
+    binding_new = build_binding_new(julia_struct)
     binding_index = build_binding_index(julia_struct)
     binding_new_index = build_binding_new_index(julia_struct)
     binding_gc = build_binding_gc(julia_struct)
-
-    return esc(quote
-        function $binding_index(L::LuaState)::Cint
-            return LuaNova.index(L, $julia_struct)
-        end
-
-        function $binding_new_index(L::LuaState)::Cint
-            return LuaNova.newindex(L, $julia_struct)
-        end
-
-        function $binding_gc(L::LuaState)::Cint
-            return LuaNova.garbage_collect(L, $julia_struct)
-        end
-    end)
-end
-
-macro define_lua_struct(julia_struct::Symbol)
-    binding_new = build_binding_new(julia_struct)
 
     return esc(quote
         function $binding_new(L::LuaState)::Cint
@@ -53,7 +36,17 @@ macro define_lua_struct(julia_struct::Symbol)
 
         $julia_struct(::LuaState, args...) = $julia_struct(args...)
 
-        LuaNova.@define_lua_struct_functions $julia_struct
+        function $binding_index(L::LuaState)::Cint
+            return LuaNova.index(L, $julia_struct)
+        end
+
+        function $binding_new_index(L::LuaState)::Cint
+            return LuaNova.newindex(L, $julia_struct)
+        end
+
+        function $binding_gc(L::LuaState)::Cint
+            return LuaNova.garbage_collect(L, $julia_struct)
+        end
     end)
 end
 
