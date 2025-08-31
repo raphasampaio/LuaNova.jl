@@ -15,7 +15,7 @@ macro define_lua_function(julia_function::Symbol)
                 return LuaNova.push_to_lua!(L, result)
             end
 
-            $julia_function(L::LuaState, args...) = $julia_function(args...)
+            $julia_function(::LuaState, args...) = $julia_function(args...)
         end
     end)
 end
@@ -46,25 +46,12 @@ macro define_lua_struct(julia_struct::Symbol)
     return esc(quote
         function $binding_new(L::LuaState)::Cint
             args = LuaNova.from_lua(L)
-            result = $julia_struct(args...)
-            LuaNova.push_to_lua!(L, result)
-            return 1
-        end
-
-        LuaNova.@define_lua_struct_functions $julia_struct
-    end)
-end
-
-macro define_lua_struct_with_state(julia_struct::Symbol)
-    binding_new = build_binding_new(julia_struct)
-
-    return esc(quote
-        function $binding_new(L::LuaState)::Cint
-            args = LuaNova.from_lua(L)
             result = $julia_struct(L, args...)
             LuaNova.push_to_lua!(L, result)
             return 1
         end
+
+        $julia_struct(::LuaState, args...) = $julia_struct(args...)
 
         LuaNova.@define_lua_struct_functions $julia_struct
     end)

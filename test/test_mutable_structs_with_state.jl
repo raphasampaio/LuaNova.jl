@@ -11,7 +11,7 @@ mutable struct Struct1
         return new(x)
     end
 end
-@define_lua_struct_with_state Struct1
+@define_lua_struct Struct1
 
 mutable struct Struct2
     x::Float64
@@ -21,7 +21,7 @@ mutable struct Struct2
         return new(2.0)
     end
 end
-@define_lua_struct_with_state Struct2
+@define_lua_struct Struct2
 
 @testset "Mutable structs with state" begin
     L = LuaNova.new_state()
