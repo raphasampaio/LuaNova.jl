@@ -4,7 +4,6 @@ export
     from_lua,
     to_cstring,
     @define_lua_function,
-    @define_lua_function_with_state,
     @define_lua_struct,
     @define_lua_struct_with_state,
     @push_lua_function,

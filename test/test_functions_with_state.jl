@@ -28,11 +28,11 @@ function state_aware_no_args(L::LuaState)
     return 42.0
 end
 
-@define_lua_function_with_state state_aware_sum
-@define_lua_function_with_state state_aware_concat
-@define_lua_function_with_state state_aware_boolean_op
-@define_lua_function_with_state state_aware_multiple_returns
-@define_lua_function_with_state state_aware_no_args
+@define_lua_function state_aware_sum
+@define_lua_function state_aware_concat
+@define_lua_function state_aware_boolean_op
+@define_lua_function state_aware_multiple_returns
+@define_lua_function state_aware_no_args
 
 @testset "Functions with state" begin
     L = LuaNova.new_state()
