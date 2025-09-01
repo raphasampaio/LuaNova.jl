@@ -113,6 +113,20 @@ macro push_lua_struct(L::Symbol, julia_struct::Symbol, args...)
     end)
 end
 
+macro push_lua_structs(L::Symbol, julia_structs::Expr, args...)
+    if julia_structs.head != :vect
+        error("Second argument must be an array of struct types like [Car, Truck]")
+    end
+
+    block = []
+    for julia_struct in julia_structs.args
+        push_expr = :(@push_lua_struct($L, $julia_struct, $(args...)))
+        push!(block, push_expr)
+    end
+
+    return esc(Expr(:block, block...))
+end
+
 macro push_lua_enumx(L::Symbol, enum::Symbol)
     enum_string = string(enum)
 
@@ -145,24 +159,4 @@ macro push_lua_enumx(L::Symbol, enum::Symbol)
         # Set the table as a global with the enum name
         LuaNova.set_global($L, $enum_string)
     end)
-end
-
-macro push_lua_abstract_structs(L::Symbol, abstract_type::Symbol, struct_types::Expr, args...)
-    n = length(args)
-    isodd(n) && error("@push_lua_abstract_structs needs key fn pairs (got $n args)")
-
-    if struct_types.head != :vect
-        error("Second argument must be an array of struct types like [Car, Truck]")
-    end
-
-    structs = struct_types.args
-    
-    # Generate individual @push_lua_struct calls for each struct
-    push_exprs = []
-    for struct_symbol in structs
-        push_expr = :(@push_lua_struct($L, $struct_symbol, $(args...)))
-        push!(push_exprs, push_expr)
-    end
-
-    return esc(Expr(:block, push_exprs...))
 end

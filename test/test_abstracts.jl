@@ -19,7 +19,7 @@ move(::Car) = "defined"
     L = LuaNova.new_state()
     LuaNova.open_libs(L)
 
-    @push_lua_abstract_structs(L, Vehicle, [Car, Truck], "move", move)
+    @push_lua_structs(L, [Car, Truck], "move", move)
 
     LuaNova.safe_script(L, "c = Car()")
     LuaNova.safe_script(L, "return c:move()")
