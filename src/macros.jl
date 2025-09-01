@@ -146,3 +146,23 @@ macro push_lua_enumx(L::Symbol, enum::Symbol)
         LuaNova.set_global($L, $enum_string)
     end)
 end
+
+macro push_lua_abstract_structs(L::Symbol, abstract_type::Symbol, struct_types::Expr, args...)
+    n = length(args)
+    isodd(n) && error("@push_lua_abstract_structs needs key fn pairs (got $n args)")
+
+    if struct_types.head != :vect
+        error("Second argument must be an array of struct types like [Car, Truck]")
+    end
+
+    structs = struct_types.args
+    
+    # Generate individual @push_lua_struct calls for each struct
+    push_exprs = []
+    for struct_symbol in structs
+        push_expr = :(@push_lua_struct($L, $struct_symbol, $(args...)))
+        push!(push_exprs, push_expr)
+    end
+
+    return esc(Expr(:block, push_exprs...))
+end
