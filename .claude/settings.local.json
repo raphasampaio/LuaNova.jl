@@ -3,7 +3,8 @@
     "allow": [
       "Bash(julia:*)",
       "Bash(cmd.exe:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(test/test.bat)"
     ],
     "deny": [],
     "ask": []
