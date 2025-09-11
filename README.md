@@ -17,7 +17,7 @@ LuaNova.jl is a lightweight Julia package that makes it easy to embed a Lua inte
 ### Installation
 
 ```julia
-julia> ] add LuaNova
+pkg> add LuaNova
 ```
 
 ### Example: Binding a function to Lua
