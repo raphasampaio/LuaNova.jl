@@ -94,98 +94,145 @@ end
     @push_lua_function(L, "merge_tables", merge_tables)
 
     # Test empty table
-    @test LuaNova.safe_script(L, "assert(is_dict_type({}))") === nothing
+    LuaNova.safe_script(L, "result = is_dict_type({})")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.to_boolean(L, -1) == true
+    LuaNova.lua_pop!(L, 1)
 
     # Test table with string keys
-    @test LuaNova.safe_script(L, "assert(get_table_value({name='John', age=30}, 'name') == 'John')") === nothing
-    @test LuaNova.safe_script(L, "assert(get_table_value({name='John', age=30}, 'age') == 30)") === nothing
+    LuaNova.safe_script(L, "result = get_table_value({name='John', age=30}, 'name')")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.to_string(L, -1) == "John"
+    LuaNova.lua_pop!(L, 1)
+
+    LuaNova.safe_script(L, "result = get_table_value({name='John', age=30}, 'age')")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.to_number(L, -1) == 30.0
+    LuaNova.lua_pop!(L, 1)
 
     # Test table with numeric keys
-    @test LuaNova.safe_script(L, "assert(get_table_value({10, 20, 30}, 1) == 10)") === nothing
-    @test LuaNova.safe_script(L, "assert(get_table_value({10, 20, 30}, 3) == 30)") === nothing
+    LuaNova.safe_script(L, "result = get_table_value({10, 20, 30}, 1)")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.to_number(L, -1) == 10.0
+    LuaNova.lua_pop!(L, 1)
+
+    LuaNova.safe_script(L, "result = get_table_value({10, 20, 30}, 3)")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.to_number(L, -1) == 30.0
+    LuaNova.lua_pop!(L, 1)
 
     # Test summing table values
-    @test LuaNova.safe_script(L, "assert(sum_table_values({a=1, b=2, c=3}) == 6)") === nothing
-    @test LuaNova.safe_script(L, "assert(sum_table_values({10, 20, 30}) == 60)") === nothing
+    LuaNova.safe_script(L, "result = sum_table_values({a=1, b=2, c=3})")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.to_number(L, -1) == 6.0
+    LuaNova.lua_pop!(L, 1)
+
+    LuaNova.safe_script(L, "result = sum_table_values({10, 20, 30})")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.to_number(L, -1) == 60.0
+    LuaNova.lua_pop!(L, 1)
 
     # Test counting table entries
-    @test LuaNova.safe_script(L, "assert(count_table_entries({a=1, b=2, c=3}) == 3)") === nothing
-    @test LuaNova.safe_script(L, "assert(count_table_entries({}) == 0)") === nothing
+    LuaNova.safe_script(L, "result = count_table_entries({a=1, b=2, c=3})")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.to_number(L, -1) == 3.0
+    LuaNova.lua_pop!(L, 1)
+
+    LuaNova.safe_script(L, "result = count_table_entries({})")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.to_number(L, -1) == 0.0
+    LuaNova.lua_pop!(L, 1)
 
     # Test nested tables
-    @test LuaNova.safe_script(L, "assert(process_nested_table({nested={value=42}}) == 42)") === nothing
+    LuaNova.safe_script(L, "result = process_nested_table({nested={value=42}})")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.to_number(L, -1) == 42.0
+    LuaNova.lua_pop!(L, 1)
 
     # Test table as one of multiple parameters
-    @test LuaNova.safe_script(L, "assert(accept_multiple_params(5, {x=10}, 3) == 18)") === nothing
+    LuaNova.safe_script(L, "result = accept_multiple_params(5, {x=10}, 3)")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.to_number(L, -1) == 18.0
+    LuaNova.lua_pop!(L, 1)
 
     # Test mixed table (both array and hash parts)
-    @test LuaNova.safe_script(L, "assert(get_table_value({10, 20, name='test'}, 1) == 10)") === nothing
-    @test LuaNova.safe_script(L, "assert(get_table_value({10, 20, name='test'}, 'name') == 'test')") === nothing
+    LuaNova.safe_script(L, "result = get_table_value({10, 20, name='test'}, 1)")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.to_number(L, -1) == 10.0
+    LuaNova.lua_pop!(L, 1)
+
+    LuaNova.safe_script(L, "result = get_table_value({10, 20, name='test'}, 'name')")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.to_string(L, -1) == "test"
+    LuaNova.lua_pop!(L, 1)
 
     # Test haskey functionality
-    @test LuaNova.safe_script(L, "assert(has_key({a=1, b=2}, 'a'))") === nothing
-    @test LuaNova.safe_script(L, "assert(not has_key({a=1, b=2}, 'c'))") === nothing
+    LuaNova.safe_script(L, "result = has_key({a=1, b=2}, 'a')")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.to_boolean(L, -1) == true
+    LuaNova.lua_pop!(L, 1)
+
+    LuaNova.safe_script(L, "result = has_key({a=1, b=2}, 'c')")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.to_boolean(L, -1) == false
+    LuaNova.lua_pop!(L, 1)
 
     # Test that tables are properly converted
-    @test LuaNova.safe_script(L, "assert(is_dict_type({x=10, y=20}))") === nothing
+    LuaNova.safe_script(L, "result = is_dict_type({x=10, y=20})")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.to_boolean(L, -1) == true
+    LuaNova.lua_pop!(L, 1)
 
     # Test returning Dict from Julia to Lua
-    @test LuaNova.safe_script(
-        L,
-        """
-    local t = return_dict()
-    assert(type(t) == 'table')
-    assert(t.name == 'Alice')
-    assert(t.age == 25)
-    assert(t.score == 95.5)
-""",
-    ) === nothing
+    LuaNova.safe_script(L, "result = return_dict()")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.is_table(L, -1) == true
+    result_dict = LuaNova.lua_table_to_dict(L, -1)
+    @test result_dict["name"] == "Alice"
+    @test result_dict["age"] == 25.0
+    @test result_dict["score"] == 95.5
+    LuaNova.lua_pop!(L, 1)
 
     # Test returning Vector from Julia to Lua
-    @test LuaNova.safe_script(
-        L,
-        """
-    local arr = return_vector()
-    assert(type(arr) == 'table')
-    assert(arr[1] == 1)
-    assert(arr[5] == 5)
-    assert(#arr == 5)
-""",
-    ) === nothing
+    LuaNova.safe_script(L, "result = return_vector()")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.is_table(L, -1) == true
+    result_vec = LuaNova.lua_table_to_vector(L, -1)
+    @test result_vec[1] == 1.0
+    @test result_vec[5] == 5.0
+    @test length(result_vec) == 5
+    LuaNova.lua_pop!(L, 1)
 
     # Test transforming a table (Lua -> Julia -> Lua)
-    @test LuaNova.safe_script(
-        L,
-        """
-    local result = transform_table({a=10, b=20, c=30})
-    assert(result.A == 20)
-    assert(result.B == 40)
-    assert(result.C == 60)
-""",
-    ) === nothing
+    LuaNova.safe_script(L, "result = transform_table({a=10, b=20, c=30})")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.is_table(L, -1) == true
+    transformed = LuaNova.lua_table_to_dict(L, -1)
+    @test transformed["A"] == 20.0
+    @test transformed["B"] == 40.0
+    @test transformed["C"] == 60.0
+    LuaNova.lua_pop!(L, 1)
 
     # Test merging two tables
-    @test LuaNova.safe_script(
-        L,
-        """
-    local result = merge_tables({a=1, b=2}, {c=3, d=4})
-    assert(result.a == 1)
-    assert(result.b == 2)
-    assert(result.c == 3)
-    assert(result.d == 4)
-""",
-    ) === nothing
+    LuaNova.safe_script(L, "result = merge_tables({a=1, b=2}, {c=3, d=4})")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.is_table(L, -1) == true
+    merged = LuaNova.lua_table_to_dict(L, -1)
+    @test merged["a"] == 1.0
+    @test merged["b"] == 2.0
+    @test merged["c"] == 3.0
+    @test merged["d"] == 4.0
+    LuaNova.lua_pop!(L, 1)
 
     # Test merging with overlapping keys
-    @test LuaNova.safe_script(
-        L,
-        """
-    local result = merge_tables({a=1, b=2}, {b=99, c=3})
-    assert(result.a == 1)
-    assert(result.b == 99)
-    assert(result.c == 3)
-""",
-    ) === nothing
+    LuaNova.safe_script(L, "result = merge_tables({a=1, b=2}, {b=99, c=3})")
+    LuaNova.get_global(L, "result")
+    @test LuaNova.is_table(L, -1) == true
+    merged2 = LuaNova.lua_table_to_dict(L, -1)
+    @test merged2["a"] == 1.0
+    @test merged2["b"] == 99.0
+    @test merged2["c"] == 3.0
+    LuaNova.lua_pop!(L, 1)
 
     LuaNova.close(L)
 
