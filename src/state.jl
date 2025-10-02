@@ -26,6 +26,8 @@ function from_lua(L::LuaState)
             args[i] = to_boolean(L, i)
         elseif type_code == C.LUA_TNIL
             args[i] = nothing
+        elseif type_code == C.LUA_TTABLE
+            args[i] = lua_table_to_dict(L, i)
         elseif type_code == C.LUA_TUSERDATA
             if C.lua_getmetatable(L, i) != 0  # Check if metatable exists
                 C.lua_pushstring(L, Base.unsafe_convert(Ptr{Cchar}, pointer("__name")))
