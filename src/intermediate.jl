@@ -58,6 +58,26 @@ function push_to_lua!(L::LuaState, x::Tuple)
     return length(x)
 end
 
+function push_to_lua!(L::LuaState, x::Dict)
+    new_table(L)
+    for (key, value) in x
+        push_to_lua!(L, key)
+        push_to_lua!(L, value)
+        C.lua_settable(L, -3)
+    end
+    return 1
+end
+
+function push_to_lua!(L::LuaState, x::Vector)
+    new_table(L)
+    for (i, value) in enumerate(x)
+        push_to_lua!(L, i)
+        push_to_lua!(L, value)
+        C.lua_settable(L, -3)
+    end
+    return 1
+end
+
 function push_to_lua!(L::LuaState, x::T) where {T}
     struct_string = to_string(T)
     userdata = new_userdata(L, 0)
