@@ -9,15 +9,28 @@ end
 @define_lua_function is_dict_type
 
 function get_table_value(table, key)
-    return table[key]
+    # Handle both Dict and Vector indexing
+    if table isa Vector
+        return table[Int(key)]
+    else
+        return table[key]
+    end
 end
 @define_lua_function get_table_value
 
 function sum_table_values(table)
     total = 0.0
-    for (k, v) in table
-        if v isa Number
-            total += v
+    if table isa Vector
+        for v in table
+            if v isa Number
+                total += v
+            end
+        end
+    else
+        for (k, v) in table
+            if v isa Number
+                total += v
+            end
         end
     end
     return total

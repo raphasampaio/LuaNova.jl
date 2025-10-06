@@ -200,16 +200,9 @@ function is_array_like(L::LuaState, idx::Integer)
     # Get the length of the array part
     array_len = Int(raw_len(L, idx))
 
-    # If length is 0, check if table has any keys at all
+    # Empty tables default to Dict (more general)
     if array_len == 0
-        # Push nil to start iteration
-        C.lua_pushnil(L)
-        # If lua_next returns 0, table is empty -> it's array-like (empty array)
-        has_elements = C.lua_next(L, idx > 0 ? idx : idx - 1) != 0
-        if has_elements
-            lua_pop!(L, 2)  # Pop key and value
-        end
-        return !has_elements  # Empty table is array-like
+        return false
     end
 
     # Count total number of keys

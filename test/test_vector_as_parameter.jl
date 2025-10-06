@@ -68,10 +68,10 @@ end
     @push_lua_function(L, "concatenate_vectors", concatenate_vectors)
     @push_lua_function(L, "reverse_vector", reverse_vector)
 
-    # Test empty vector
+    # Test empty table (defaults to Dict, not Vector)
     LuaNova.safe_script(L, "result = is_vector_type({})")
     LuaNova.get_global(L, "result")
-    @test LuaNova.to_boolean(L, -1) == true
+    @test LuaNova.to_boolean(L, -1) == false
     LuaNova.lua_pop!(L, 1)
 
     # Test vector element access
