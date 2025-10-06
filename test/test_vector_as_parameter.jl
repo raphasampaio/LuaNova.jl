@@ -9,7 +9,7 @@ end
 @define_lua_function is_vector_type
 
 function get_vector_element(vec, index)
-    return vec[index]
+    return vec[Int(index)]
 end
 @define_lua_function get_vector_element
 

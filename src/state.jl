@@ -27,7 +27,12 @@ function from_lua(L::LuaState)
         elseif type_code == C.LUA_TNIL
             args[i] = nothing
         elseif type_code == C.LUA_TTABLE
-            args[i] = lua_table_to_dict(L, i)
+            # Check if table is array-like or dict-like
+            if is_array_like(L, i)
+                args[i] = lua_table_to_vector(L, i)
+            else
+                args[i] = lua_table_to_dict(L, i)
+            end
         elseif type_code == C.LUA_TUSERDATA
             if C.lua_getmetatable(L, i) != 0  # Check if metatable exists
                 C.lua_pushstring(L, Base.unsafe_convert(Ptr{Cchar}, pointer("__name")))

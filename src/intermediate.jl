@@ -192,6 +192,39 @@ function raw_len(L::LuaState, idx::Integer)
     return C.lua_rawlen(L, idx)
 end
 
+function is_array_like(L::LuaState, idx::Integer)
+    if !is_table(L, idx)
+        return false
+    end
+
+    # Get the length of the array part
+    array_len = Int(raw_len(L, idx))
+
+    # If length is 0, check if table has any keys at all
+    if array_len == 0
+        # Push nil to start iteration
+        C.lua_pushnil(L)
+        # If lua_next returns 0, table is empty -> it's array-like (empty array)
+        has_elements = C.lua_next(L, idx > 0 ? idx : idx - 1) != 0
+        if has_elements
+            lua_pop!(L, 2)  # Pop key and value
+        end
+        return !has_elements  # Empty table is array-like
+    end
+
+    # Count total number of keys
+    key_count = 0
+    C.lua_pushnil(L)
+    while C.lua_next(L, idx > 0 ? idx : idx - 1) != 0
+        key_count += 1
+        lua_pop!(L, 1)  # Pop value, keep key for next iteration
+    end
+
+    # It's array-like if all keys are in the array part
+    # (i.e., total keys == array length)
+    return key_count == array_len
+end
+
 function lua_table_to_vector(L::LuaState, idx::Integer)
     if !is_table(L, idx)
         error("Value at index $idx is not a table")
