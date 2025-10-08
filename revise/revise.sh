@@ -2,4 +2,4 @@
 
 BASEPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-julia +1.11 --project=$BASEPATH --interactive --load=$BASEPATH/revise.jl
+julia +1.12 --project=$BASEPATH --interactive --load=$BASEPATH/revise.jl
