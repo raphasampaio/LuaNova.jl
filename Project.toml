@@ -1,5 +1,6 @@
 name = "LuaNova"
 uuid = "faa88067-b4cd-4998-97ac-8175b58d6ef9"
+authors = ["raphasampaio"]
 version = "0.1.7"
 
 [deps]
