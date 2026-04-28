@@ -14,13 +14,16 @@ end
 
     @push_lua_struct(L, Container)
 
-    LuaNova.safe_script(L, """
-        function Container.scale(self, factor)
-            self.x = self.x * factor
-        end
-        c = Container(5.0)
-        c:scale(3.0)
-    """)
+    LuaNova.safe_script(
+        L,
+        """
+    function Container.scale(self, factor)
+        self.x = self.x * factor
+    end
+    c = Container(5.0)
+    c:scale(3.0)
+""",
+    )
     LuaNova.safe_script(L, "return c.x")
     @test LuaNova.to_number(L, -1) == 15.0
 
