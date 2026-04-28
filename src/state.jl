@@ -70,10 +70,12 @@ function index(L::Ptr{C.lua_State}, ::Type{T}) where {T}
         val = getfield(ref, Symbol(key))
         push_to_lua!(L, val)
     else
-        # otherwise fall back to normal metatable lookup
+        # Look up the method in meta.__dispatch (the global T table populated
+        # by @push_lua_struct). This is also where Lua-side extension lands.
         get_metatable(L, type_string)
+        C.lua_getfield(L, -1, to_cstring("__dispatch"))
         C.lua_pushvalue(L, 2)
-        C.lua_gettable(L, -2)
+        C.lua_rawget(L, -2)
     end
 
     return 1
