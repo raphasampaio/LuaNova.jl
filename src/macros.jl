@@ -28,6 +28,9 @@ macro define_lua_struct(julia_struct::Symbol)
 
     return esc(quote
         function $binding_new(L::LuaState)::Cint
+            # When invoked via the type-table's __call metamethod, Lua passes
+            # the table itself as arg 1. Drop it so from_lua sees only ctor args.
+            LuaNova.C.lua_remove(L, 1)
             args = LuaNova.from_lua(L)
             result = $julia_struct(L, args...)
             LuaNova.push_to_lua!(L, result)
@@ -69,47 +72,87 @@ macro push_lua_struct(L::Symbol, julia_struct::Symbol, args...)
     binding_index = build_binding_index(julia_struct)
     binding_new_index = build_binding_new_index(julia_struct)
 
-    method_entries = Expr[]
+    # Partition (key, fn) pairs:
+    #   __-prefixed keys → instance metatable (Lua looks up real metamethods there).
+    #   other keys       → dispatch table (the global T), so Lua-side
+    #                      `function T.method(self, ...) end` extension works.
+    meta_entries = Expr[]
+    dispatch_setup = Expr[]
 
     push!(
-        method_entries,
+        meta_entries,
         :(LuaNova.create_register("__gc", @cfunction($binding_gc, Cint, (Ptr{LuaNova.C.lua_State},)))),
     )
 
     push!(
-        method_entries,
+        meta_entries,
         :(LuaNova.create_register("__index", @cfunction($binding_index, Cint, (Ptr{LuaNova.C.lua_State},)))),
     )
 
     push!(
-        method_entries,
+        meta_entries,
         :(LuaNova.create_register("__newindex", @cfunction($binding_new_index, Cint, (Ptr{LuaNova.C.lua_State},)))),
     )
 
     for i in 1:2:n
         key = args[i]
+        if !(key isa AbstractString)
+            error("@push_lua_struct keys must be string literals, got: $key")
+        end
         binding_function = build_binding_function(args[i+1])
-        push!(
-            method_entries,
-            :(LuaNova.create_register($key, @cfunction($binding_function, Cint, (Ptr{Cvoid},)))),
-        )
+
+        if startswith(key, "__")
+            push!(
+                meta_entries,
+                :(LuaNova.create_register($key, @cfunction($binding_function, Cint, (Ptr{Cvoid},)))),
+            )
+        else
+            push!(
+                dispatch_setup,
+                quote
+                    LuaNova.push_cfunction($L, @cfunction($binding_function, Cint, (Ptr{Cvoid},)))
+                    LuaNova.C.lua_setfield($L, -2, LuaNova.to_cstring($key))
+                end,
+            )
+        end
     end
 
     push!(
-        method_entries,
+        meta_entries,
         :(LuaNova.create_null_register()),
     )
 
-    methods_vector = Expr(:vect, method_entries...)
+    methods_vector = Expr(:vect, meta_entries...)
+    dispatch_block = Expr(:block, dispatch_setup...)
 
     return esc(quote
+        # Instance metatable in the registry, populated in one set_functions call.
         LuaNova.new_metatable($L, $julia_struct_string)
         local methods = $methods_vector
         LuaNova.set_functions($L, methods)
-        LuaNova.lua_pop!($L, 1)
+        # stack: [meta]
 
+        # Dispatch table — becomes the global T, holds non-metamethod entries.
+        LuaNova.new_table($L)
+        # stack: [meta, dispatch]
+        $dispatch_block
+
+        # Link meta.__dispatch -> dispatch so instance __index can find methods.
+        LuaNova.C.lua_pushvalue($L, -1)
+        LuaNova.C.lua_setfield($L, -3, LuaNova.to_cstring("__dispatch"))
+        # stack: [meta, dispatch]
+
+        # Type-side metatable with __call = constructor, so T(args...) still works.
+        LuaNova.new_table($L)
         LuaNova.push_cfunction($L, @cfunction($binding_new, Cint, (Ptr{LuaNova.C.lua_State},)))
+        LuaNova.C.lua_setfield($L, -2, LuaNova.to_cstring("__call"))
+        # stack: [meta, dispatch, type_meta]
+        LuaNova.C.lua_setmetatable($L, -2)
+        # stack: [meta, dispatch]
+
         LuaNova.set_global($L, $julia_struct_string)
+        # stack: [meta]
+        LuaNova.lua_pop!($L, 1)
     end)
 end
 

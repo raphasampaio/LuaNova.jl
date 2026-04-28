@@ -1,7 +1,7 @@
 name = "LuaNova"
 uuid = "faa88067-b4cd-4998-97ac-8175b58d6ef9"
 authors = ["raphasampaio"]
-version = "0.1.8"
+version = "0.1.9"
 
 [deps]
 EnumX = "4e289a0a-7415-4d19-859d-a7e5c4648b56"
